@@ -1,18 +1,18 @@
 <#
 .SYNOPSIS
-Builds the distributable Audio Priority packages for one architecture.
+Builds the distributable AudioTray packages for one architecture.
 
 .DESCRIPTION
 Publishes the app self-contained (no .NET runtime needed on the target), then builds:
-  - the per-user Inno Setup installer  -> artifacts\installer\AudioPrioritySetup-<ver>-<arch>.exe
-  - the Microsoft Store MSIX (-Msix)   -> artifacts\msix\AudioPriority-<ver>.0-<arch>.msix
+  - the per-user Inno Setup installer  -> artifacts\installer\AudioTraySetup-<ver>-<arch>.exe
+  - the Microsoft Store MSIX (-Msix)   -> artifacts\msix\AudioTray-<ver>.0-<arch>.msix
 
 The MSIX is unsigned on purpose: Partner Center signs Store submissions. Its identity comes from
 Partner Center > Product identity, passed as parameters or AUDIOPRIORITY_MSIX_* variables.
 
 .EXAMPLE
 ./packaging/build.ps1 -Runtime win-x64
-./packaging/build.ps1 -Runtime win-arm64 -Msix -IdentityName Publisher.AudioPriority -Publisher "CN=..." -PublisherDisplayName Publisher
+./packaging/build.ps1 -Runtime win-arm64 -Msix -IdentityName Publisher.AudioTray -Publisher "CN=..." -PublisherDisplayName Publisher
 #>
 [CmdletBinding()]
 param(
@@ -29,7 +29,7 @@ param(
     [string]$Publisher = $env:AUDIOPRIORITY_MSIX_PUBLISHER,
     [string]$PublisherDisplayName = $env:AUDIOPRIORITY_MSIX_PUBLISHER_DISPLAY_NAME,
     # Must equal the app name reserved in Partner Center.
-    [string]$DisplayName = $(if ($env:AUDIOPRIORITY_MSIX_DISPLAY_NAME) { $env:AUDIOPRIORITY_MSIX_DISPLAY_NAME } else { 'Audio Priority' })
+    [string]$DisplayName = $(if ($env:AUDIOPRIORITY_MSIX_DISPLAY_NAME) { $env:AUDIOPRIORITY_MSIX_DISPLAY_NAME } else { 'AudioTray' })
 )
 
 $ErrorActionPreference = 'Stop'
@@ -71,7 +71,7 @@ if (-not $SkipInstaller) {
     Write-Host "Compiling installer..."
     Invoke-Checked $iscc @('/Q', "/DMyAppVersion=$Version", "/DMyArch=$arch", "/DMyDistDir=$publishDir",
         (Join-Path $PSScriptRoot 'AudioPriorityTray.iss'))
-    Write-Host (Join-Path $artifacts "installer/AudioPrioritySetup-$Version-$arch.exe")
+    Write-Host (Join-Path $artifacts "installer/AudioTraySetup-$Version-$arch.exe")
 }
 
 if ($Msix) {
@@ -101,7 +101,7 @@ if ($Msix) {
 
     $msixDir = Join-Path $artifacts 'msix'
     New-Item -ItemType Directory -Force $msixDir | Out-Null
-    $package = Join-Path $msixDir "AudioPriority-$packageVersion-$arch.msix"
+    $package = Join-Path $msixDir "AudioTray-$packageVersion-$arch.msix"
     Write-Host "Packing MSIX..."
     Invoke-Checked $makeappx @('pack', '/d', $layout, '/p', $package, '/o')
     Write-Host $package

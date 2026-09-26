@@ -1,6 +1,6 @@
 # Design
 
-Audio Priority adopts **Windows Design System 1.0.0** (2026-09-25). The system's `DESIGN.md`,
+AudioTray adopts **Windows Design System 1.0.0** (2026-09-25). The system's `DESIGN.md`,
 `windows.md`, and `components.md` are the contract; this file records how this app applies it and
 where it deliberately deviates.
 

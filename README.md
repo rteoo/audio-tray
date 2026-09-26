@@ -1,7 +1,7 @@
-# Audio Priority for Windows
+# AudioTray
 
 <p align="center">
-  <img src="icon.png" width="128" height="128" alt="Audio Priority icon">
+  <img src="icon.png" width="128" height="128" alt="AudioTray icon">
 </p>
 
 A native Windows 11 system-tray app that manages audio device priorities automatically. Rank your
@@ -15,7 +15,7 @@ menu bar app with the same priority model.
 ![.NET](https://img.shields.io/badge/.NET-10-purple)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-<p align="center"><img src="screenshot-windows.png" width="360" alt="Audio Priority flyout"></p>
+<p align="center"><img src="screenshot-windows.png" width="360" alt="AudioTray flyout"></p>
 
 ## Features
 
@@ -45,14 +45,14 @@ Requires Windows 11 (Windows 10 is untested; it would lack the Acrylic backdrop)
 
 ### Installer (recommended)
 
-Download `AudioPrioritySetup-<version>-x64.exe` (or `-arm64.exe`) from
+Download `AudioTraySetup-<version>-x64.exe` (or `-arm64.exe`) from
 [Releases](https://github.com/rteoo/audio-tray/releases) and run it. It installs per user (no admin
-prompt) into `%LOCALAPPDATA%\Programs\Audio Priority`, includes .NET, adds a Start menu entry, and
+prompt) into `%LOCALAPPDATA%\Programs\AudioTray`, includes .NET, adds a Start menu entry, and
 can start the app with Windows. Uninstall from **Settings → Apps**; your settings in
 `%LOCALAPPDATA%\AudioPriorityTray` are kept. Tagged versions are stable; **nightly** tracks the
 latest `main`. Builds are unsigned, so SmartScreen may warn on first run.
 
-The portable `AudioPriorityTray-win-*.exe` on the same page needs the
+The portable `AudioTray-win-*.exe` on the same page needs the
 [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0).
 
 Windows 11 puts new tray icons in the overflow (^) menu; drag it onto the taskbar, or enable it under
@@ -69,16 +69,16 @@ cd audio-tray
 pwsh packaging/build.ps1 -Runtime win-x64
 ```
 
-This publishes a self-contained build and writes `artifacts\installer\AudioPrioritySetup-<version>-x64.exe`.
+This publishes a self-contained build and writes `artifacts\installer\AudioTraySetup-<version>-x64.exe`.
 
 ### Microsoft Store package
 
 `pwsh packaging/build.ps1 -Msix -IdentityName <name> -Publisher "CN=<id>" -PublisherDisplayName <publisher>`
-writes an unsigned `artifacts\msix\AudioPriority-<version>.0-<arch>.msix`, using the identity values
+writes an unsigned `artifacts\msix\AudioTray-<version>.0-<arch>.msix`, using the identity values
 from Partner Center → Product identity; Partner Center signs it on upload. CI builds it too when the
 `AUDIOPRIORITY_MSIX_IDENTITY_NAME`, `AUDIOPRIORITY_MSIX_PUBLISHER` and
 `AUDIOPRIORITY_MSIX_PUBLISHER_DISPLAY_NAME` repository variables are set (optionally
-`AUDIOPRIORITY_MSIX_DISPLAY_NAME` if the reserved name isn't "Audio Priority").
+`AUDIOPRIORITY_MSIX_DISPLAY_NAME` if the reserved name isn't "AudioTray").
 
 ## Usage
 
