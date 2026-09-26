@@ -28,6 +28,12 @@ dotnet run --project src/AudioPriorityTray
 dotnet publish src/AudioPriorityTray -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -o publish
 ```
 
+## CI and releases
+
+`.github/workflows/build.yml` builds and tests on every PR and push. Pushes to `main` replace the
+rolling `nightly` pre-release; pushing a `v*` tag publishes a versioned release (the tag sets the
+version). Assets are framework-dependent single-file exes for win-x64 and win-arm64.
+
 ## Conventions
 
 - `TreatWarningsAsErrors` is on for every project.

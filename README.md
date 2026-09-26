@@ -46,6 +46,12 @@ menu bar app with the same priority model.
 - Windows 11 (Windows 10 is untested; it would lack the Acrylic backdrop)
 - [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0)
 
+### Download
+
+Grab `AudioPriorityTray-win-x64.exe` (or `-win-arm64.exe`) from
+[Releases](https://github.com/rteoo/audio-tray/releases). Tagged versions are stable; **nightly**
+tracks the latest `main`. The exe is unsigned, so SmartScreen may warn on first run.
+
 ### Build from source
 
 Requires the .NET 10 SDK.
