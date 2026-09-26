@@ -20,7 +20,7 @@
     <Resource Language="en-US" />
   </Resources>
   <Applications>
-    <Application Id="AudioPriority" Executable="AudioPriorityTray.exe" EntryPoint="Windows.FullTrustApplication">
+    <Application Id="AudioTray" Executable="AudioPriorityTray.exe" EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
         DisplayName="{{DisplayName}}"
         Description="Keeps your preferred speakers, headphones and microphones as the Windows default."

@@ -1,4 +1,4 @@
-; Inno Setup script for Audio Priority: per-user install, no admin required.
+; Inno Setup script for AudioTray: per-user install, no admin required.
 ;
 ; Build with packaging\build.ps1, which publishes the self-contained app and passes
 ; MyAppVersion, MyArch and MyDistDir, e.g.:
@@ -17,7 +17,7 @@
   #define MyDistDir "..\artifacts\publish\win-" + MyArch
 #endif
 
-#define MyAppName "Audio Priority"
+#define MyAppName "AudioTray"
 #define MyAppPublisher "Project Contributors"
 #define MyAppExeName "AudioPriorityTray.exe"
 ; Same value name the app's own "Start with Windows" toggle uses, so both stay in sync.
@@ -34,6 +34,8 @@ AppPublisherURL=https://github.com/rteoo/audio-tray
 DefaultDirName={localappdata}\Programs\{#MyAppName}
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
+; Upgrades from "Audio Priority" (v1.0.0) move to the new Start menu group instead of keeping the old one.
+UsePreviousGroup=no
 ; Per-user install: no administrator/UAC prompt.
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
@@ -46,7 +48,7 @@ ArchitecturesInstallIn64BitMode=x64compatible
 #endif
 MinVersion=10.0.17763
 OutputDir=..\artifacts\installer
-OutputBaseFilename=AudioPrioritySetup-{#MyAppVersion}-{#MyArch}
+OutputBaseFilename=AudioTraySetup-{#MyAppVersion}-{#MyArch}
 Compression=lzma2
 SolidCompression=yes
 SetupIconFile=..\src\AudioPriorityTray\Assets\AudioPriorityTray.ico
@@ -73,6 +75,11 @@ Name: "startup"; Description: "{cm:StartupTask,{#MyAppName}}"; GroupDescription:
 
 [Files]
 Source: "{#MyDistDir}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs ignoreversion
+
+[InstallDelete]
+; Shortcuts left by releases named "Audio Priority" (v1.0.0), before the AudioTray rename.
+Type: filesandordirs; Name: "{autoprograms}\Audio Priority"
+Type: files; Name: "{autodesktop}\Audio Priority.lnk"
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"

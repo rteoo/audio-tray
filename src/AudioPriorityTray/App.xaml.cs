@@ -100,8 +100,8 @@ public partial class App : Application
     private void OnUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
         Log.Error($"Unhandled: {e.Exception}");
-        MessageBox.Show($"Audio Priority hit an unexpected error and will close.\n\n{e.Exception.Message}\n\nDetails: {Log.FilePath}",
-            "Audio Priority", MessageBoxButton.OK, MessageBoxImage.Error);
+        MessageBox.Show($"AudioTray hit an unexpected error and will close.\n\n{e.Exception.Message}\n\nDetails: {Log.FilePath}",
+            "AudioTray", MessageBoxButton.OK, MessageBoxImage.Error);
         e.Handled = true;
         Shutdown(1);
     }

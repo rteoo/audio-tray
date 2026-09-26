@@ -4,7 +4,10 @@
     <UseWPF>true</UseWPF>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\AudioPriorityTray.ico</ApplicationIcon>
-    <Product>Audio Priority</Product>
+    <Product>AudioTray</Product>
+    <!-- Shown by Task Manager and Explorer; the exe keeps its original name so existing installs,
+         the Run key and settings stay valid. -->
+    <AssemblyTitle>AudioTray</AssemblyTitle>
     <Version>1.0.0</Version>
     <!-- WPF's Windows 11 (Fluent) theme, Application.ThemeMode, is still flagged experimental. -->
     <NoWarn>$(NoWarn);WPF0001</NoWarn>

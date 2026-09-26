@@ -100,7 +100,7 @@ public sealed class MainViewModel : ObservableObject
     public IReadOnlyList<MenuEntry> BuildAppMenu(Action quit, Action? openFlyout = null)
     {
         var entries = new List<MenuEntry>();
-        if (openFlyout is not null) entries.AddRange([new("Open Audio Priority", Glyphs.Volume, openFlyout), MenuEntry.Separator]);
+        if (openFlyout is not null) entries.AddRange([new("Open AudioTray", Glyphs.Volume, openFlyout), MenuEntry.Separator]);
         entries.AddRange(
         [
             new("Speakers", null, () => SelectMode(OutputCategory.Speaker), IsChecked: IsSpeakerMode),
