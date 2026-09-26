@@ -34,8 +34,9 @@ menu bar app with the same priority model.
   auto-selection entirely.
 - **Drag to reorder**: drag rows, or use Move up/Move down from the row menu.
 - **Volume**: slider or mouse wheel (2% per notch) for the default output.
-- **Windows 11 design**: Acrylic flyout, Fluent controls, light/dark and accent color that follow
-  Windows, and a monochrome tray glyph that reflects mode, volume, and mute.
+- **Windows 11 design**: Acrylic flyout, Fluent controls, light/dark and highlights that follow the
+  Windows accent color, full keyboard operation, and a monochrome tray glyph that reflects mode,
+  volume, and mute. See [DESIGN.md](DESIGN.md).
 - **Start with Windows**: per-user, and respects the toggle in Task Manager's startup apps.
 
 ## Install
@@ -76,6 +77,8 @@ Microphones always follow their own priority list, except in Manual mode.
 - **Click a device** to move it to the top (automatic modes) or select it (Manual mode).
 - **Right-click a device**, or use its **⋯** button, to move it between Speakers and Headphones,
   ignore it, reorder it, mark it Never use, or forget a disconnected device.
+- **Keyboard**: Tab to a device, Enter to activate, Ctrl+Up/Down to reorder, Shift+F10 for its
+  actions, Escape to close.
 - **Edit** shows every device ever seen, including disconnected and ignored ones.
 
 In automatic modes the app enforces the ranking: if something else changes the default device, the

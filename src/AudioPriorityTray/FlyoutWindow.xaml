@@ -16,7 +16,7 @@
         Topmost="True"
         Background="Transparent"
         Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-        FontFamily="Segoe UI Variable Text, Segoe UI"
+        FontFamily="{StaticResource UiFont}"
         FontSize="14"
         UseLayoutRounding="True">
   <!-- Client area covers the whole DWM frame so the system backdrop, border and shadow show. -->
@@ -34,25 +34,29 @@
       <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
-    <!-- Mode tiles and volume -->
-    <StackPanel Margin="16,16,16,14">
-      <UniformGrid Columns="3">
-        <Button Style="{StaticResource ModeTile}" Margin="0,0,6,0" Content="Speakers"
-                local:Ui.Glyph="&#xE767;" local:Ui.IsSelected="{Binding IsSpeakerMode}"
-                ToolTip="Auto-switch between speakers" Click="OnSpeakerModeClick" />
-        <Button Style="{StaticResource ModeTile}" Margin="3,0,3,0" Content="Headphones"
-                local:Ui.Glyph="&#xE7F6;" local:Ui.IsSelected="{Binding IsHeadphoneMode}"
-                ToolTip="Auto-switch between headphones" Click="OnHeadphoneModeClick" />
-        <Button Style="{StaticResource ModeTile}" Margin="6,0,0,0" Content="Manual"
-                local:Ui.Glyph="&#xE815;" local:Ui.IsSelected="{Binding IsCustomMode}"
-                ToolTip="Manual mode: pick devices yourself, no auto-switching" Click="OnManualModeClick" />
+    <!-- Raw DWM Acrylic samples whatever is behind it and reads mid-grey over bright windows.
+         Windows' own flyouts layer a theme tint over it; this is that tint, using the canvas color. -->
+    <Border Grid.RowSpan="3" Background="{DynamicResource SolidBackgroundFillColorBaseBrush}" Opacity="0.9" />
+
+    <!-- Mode and volume -->
+    <StackPanel Margin="16">
+      <UniformGrid Columns="3" AutomationProperties.Name="Mode">
+        <RadioButton Style="{StaticResource ModeTile}" GroupName="Mode" Margin="0,0,4,0" Content="Speakers" Tag="&#xE767;"
+                     IsChecked="{Binding IsSpeakerMode, Mode=OneWay}" Click="OnSpeakerModeClick"
+                     ToolTip="Auto-switch between speakers" />
+        <RadioButton Style="{StaticResource ModeTile}" GroupName="Mode" Margin="4,0" Content="Headphones" Tag="&#xE7F6;"
+                     IsChecked="{Binding IsHeadphoneMode, Mode=OneWay}" Click="OnHeadphoneModeClick"
+                     ToolTip="Auto-switch between headphones" />
+        <RadioButton Style="{StaticResource ModeTile}" GroupName="Mode" Margin="4,0,0,0" Content="Manual" Tag="&#xE815;"
+                     IsChecked="{Binding IsCustomMode, Mode=OneWay}" Click="OnManualModeClick"
+                     ToolTip="Manual: pick devices yourself, no auto-switching" />
       </UniformGrid>
 
       <Grid Margin="0,16,0,0" Background="Transparent" PreviewMouseWheel="OnVolumeWheel">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="32" />
           <ColumnDefinition Width="*" />
-          <ColumnDefinition Width="44" />
+          <ColumnDefinition Width="40" />
         </Grid.ColumnDefinitions>
         <TextBlock Text="{Binding VolumeGlyph}" FontFamily="{StaticResource IconFont}" FontSize="16"
                    VerticalAlignment="Center" HorizontalAlignment="Left" Margin="4,0,0,0" />
@@ -67,8 +71,8 @@
 
     <!-- Device lists -->
     <Border Grid.Row="1" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}">
-      <ScrollViewer MaxHeight="440" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <StackPanel Margin="8,8,8,4">
+      <ScrollViewer MaxHeight="440" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+        <StackPanel Margin="8">
           <local:DeviceSectionView DataContext="{Binding Speakers}" Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisibility}}" />
           <local:DeviceSectionView DataContext="{Binding Headphones}" Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisibility}}" />
           <local:DeviceSectionView DataContext="{Binding Microphones}" />
@@ -78,12 +82,12 @@
 
     <!-- Footer bar -->
     <Border Grid.Row="2" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}"
-            Background="{DynamicResource LayerOnAcrylicFillColorDefaultBrush}" Padding="8,6">
+            Background="{DynamicResource LayerOnAcrylicFillColorDefaultBrush}" Padding="8,4">
       <DockPanel LastChildFill="False">
         <Button DockPanel.Dock="Left" Style="{StaticResource SubtleButton}" Click="OnIgnoredClick"
-                ToolTip="Ignored devices" Visibility="{Binding ShowIgnored, Converter={StaticResource BoolToVisibility}}">
+                ToolTip="Show ignored devices" Visibility="{Binding ShowIgnored, Converter={StaticResource BoolToVisibility}}">
           <StackPanel Orientation="Horizontal">
-            <TextBlock Text="&#xED1A;" FontFamily="{StaticResource IconFont}" FontSize="14" VerticalAlignment="Center"
+            <TextBlock Text="&#xED1A;" FontFamily="{StaticResource IconFont}" FontSize="16" VerticalAlignment="Center"
                        Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
             <TextBlock Margin="8,0,0,0" FontSize="12" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                        Text="{Binding IgnoredCount, StringFormat='{}{0} ignored'}" />
@@ -93,7 +97,7 @@
         <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE712;"
                 ToolTip="More options" AutomationProperties.Name="More options" Click="OnMoreClick" />
         <Button DockPanel.Dock="Right" Click="OnEditClick" Margin="0,0,4,0"
-                ToolTip="Edit: show every device ever connected, including disconnected and ignored ones">
+                ToolTip="Show every device ever connected, including disconnected and ignored ones">
           <Button.Style>
             <Style TargetType="Button" BasedOn="{StaticResource SubtleButton}">
               <Style.Triggers>
@@ -104,7 +108,7 @@
             </Style>
           </Button.Style>
           <StackPanel Orientation="Horizontal">
-            <TextBlock FontFamily="{StaticResource IconFont}" FontSize="14" VerticalAlignment="Center">
+            <TextBlock FontFamily="{StaticResource IconFont}" FontSize="16" VerticalAlignment="Center">
               <TextBlock.Style>
                 <Style TargetType="TextBlock">
                   <Setter Property="Text" Value="&#xE70F;" />

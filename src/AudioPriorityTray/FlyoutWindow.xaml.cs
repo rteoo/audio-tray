@@ -139,19 +139,36 @@ public partial class FlyoutWindow : Window
         SetWindowPos(_hwnd, IntPtr.Zero, x, y, 0, 0, SwpNoSize | SwpNoZOrder | SwpNoActivate);
     }
 
+    /// <summary>
+    /// Short spatial reveal (design system: 300ms spatial, 100ms feedback, standard curve
+    /// cubic-bezier(.2,0,0,1)); skipped entirely when Windows animation effects are off.
+    /// </summary>
     private void PlayEntrance()
     {
-        var ease = new ExponentialEase { EasingMode = EasingMode.EaseOut, Exponent = 5 };
-        EntranceOffset.BeginAnimation(TranslateTransform.YProperty,
-            new DoubleAnimation(_entranceOffset, 0, TimeSpan.FromMilliseconds(300)) { EasingFunction = ease });
-        Root.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(150)));
+        if (!SystemParameters.ClientAreaAnimation)
+        {
+            EntranceOffset.BeginAnimation(TranslateTransform.YProperty, null);
+            Root.BeginAnimation(OpacityProperty, null);
+            return;
+        }
+        EntranceOffset.BeginAnimation(TranslateTransform.YProperty, StandardCurve(_entranceOffset, 0, 300));
+        Root.BeginAnimation(OpacityProperty, StandardCurve(0, 1, 100));
     }
+
+    private static DoubleAnimationUsingKeyFrames StandardCurve(double from, double to, int milliseconds) => new()
+    {
+        KeyFrames =
+        {
+            new DiscreteDoubleKeyFrame(from, KeyTime.FromTimeSpan(TimeSpan.Zero)),
+            new SplineDoubleKeyFrame(to, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(milliseconds)), new KeySpline(0.2, 0, 0, 1)),
+        },
+    };
 
     private void OnSpeakerModeClick(object sender, RoutedEventArgs e) => _viewModel.SelectMode(OutputCategory.Speaker);
 
     private void OnHeadphoneModeClick(object sender, RoutedEventArgs e) => _viewModel.SelectMode(OutputCategory.Headphone);
 
-    private void OnManualModeClick(object sender, RoutedEventArgs e) => _viewModel.ToggleCustomMode();
+    private void OnManualModeClick(object sender, RoutedEventArgs e) => _viewModel.EnterManualMode();
 
     private void OnEditClick(object sender, RoutedEventArgs e) => _viewModel.ToggleEditMode();
 

@@ -31,6 +31,21 @@ public sealed class DeviceRowViewModel(AudioDevice device) : ObservableObject
 
     public bool IsDragging { get => _isDragging; set => Set(ref _isDragging, value); }
 
+    /// <summary>What the row shows visually, as text for screen readers.</summary>
+    public string AccessibleStatus
+    {
+        get
+        {
+            var parts = new List<string> { $"Priority {PriorityText}" };
+            if (IsActive) parts.Add("Active");
+            if (IsMuted) parts.Add("Muted");
+            if (IsDisconnected) parts.Add(StatusText.Length > 0 ? $"Disconnected, last seen {StatusText}" : "Disconnected");
+            else if (IsNeverUse) parts.Add("Never use");
+            else if (StatusGlyph == Glyphs.Hide) parts.Add("Ignored");
+            return string.Join(", ", parts);
+        }
+    }
+
     public void Update(AudioManager manager, AudioDevice device, int index, string? currentId, PriorityList list)
     {
         Device = device;
@@ -48,5 +63,6 @@ public sealed class DeviceRowViewModel(AudioDevice device) : ObservableObject
         StatusText = IsDisconnected && manager.Store.GetStoredDevice(device.Id) is { } stored
             ? stored.LastSeenRelative(manager.Now)
             : "";
+        OnPropertyChanged(nameof(AccessibleStatus));
     }
 }

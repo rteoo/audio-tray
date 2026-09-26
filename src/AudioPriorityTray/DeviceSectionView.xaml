@@ -7,42 +7,55 @@
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:SectionViewModel}">
   <StackPanel Margin="0,0,0,8">
-    <StackPanel Orientation="Horizontal" Margin="8,6,0,6">
-      <TextBlock Text="{Binding Glyph}" FontFamily="{StaticResource IconFont}" FontSize="12" VerticalAlignment="Center"
+    <StackPanel Orientation="Horizontal" Margin="12,8,0,8">
+      <TextBlock Text="{Binding Glyph}" FontFamily="{StaticResource IconFont}" FontSize="16" VerticalAlignment="Center"
                  Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
-      <TextBlock Text="{Binding Title}" Margin="8,0,0,0" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"
-                 Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+      <TextBlock Text="{Binding Title}" Margin="8,0,0,0" FontWeight="SemiBold" VerticalAlignment="Center" />
     </StackPanel>
 
-    <TextBlock Text="No devices" Margin="12,6,0,6" FontSize="12" FontStyle="Italic"
-               Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+    <TextBlock Text="No devices" Margin="12,8" FontSize="12"
+               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}" />
 
     <Grid>
       <ItemsControl x:Name="Items" ItemsSource="{Binding Rows}" Focusable="False"
+                    AutomationProperties.Name="{Binding Title}"
                     PreviewMouseLeftButtonDown="OnPreviewMouseDown"
                     PreviewMouseMove="OnPreviewMouseMove"
                     PreviewMouseLeftButtonUp="OnPreviewMouseUp"
-                    LostMouseCapture="OnLostMouseCapture">
+                    LostMouseCapture="OnLostMouseCapture"
+                    PreviewKeyDown="OnRowKeyDown">
         <ItemsControl.ItemTemplate>
           <DataTemplate DataType="{x:Type vm:DeviceRowViewModel}">
-            <Border x:Name="Row" Height="40" Margin="0,1" CornerRadius="4" BorderThickness="1"
-                    Background="Transparent" BorderBrush="Transparent" MouseRightButtonUp="OnRowRightClick">
+            <!-- A row is one tab stop: Enter/Space activate, Shift+F10 or the menu key open its
+                 actions, Up/Down move focus, Ctrl+Up/Down reorder. -->
+            <Border x:Name="Row" MinHeight="44" Margin="0,0,0,2" CornerRadius="4" BorderThickness="1"
+                    Background="Transparent" BorderBrush="Transparent"
+                    Focusable="True" FocusVisualStyle="{StaticResource FocusRing}"
+                    AutomationProperties.Name="{Binding Name}"
+                    AutomationProperties.ItemStatus="{Binding AccessibleStatus}"
+                    MouseRightButtonUp="OnRowRightClick">
               <Grid>
                 <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="36" />
+                  <ColumnDefinition Width="40" />
                   <ColumnDefinition Width="*" />
                   <ColumnDefinition Width="Auto" />
-                  <ColumnDefinition Width="36" />
+                  <ColumnDefinition Width="40" />
                 </Grid.ColumnDefinitions>
 
-                <!-- Windows 11 list selection indicator -->
+                <!-- Selected-row backplate: the Windows accent (SystemColors.AccentColor, live) at low
+                     opacity over the surface, so it tracks the system accent while primary text keeps
+                     its contrast. -->
+                <Border x:Name="Backplate" Grid.ColumnSpan="4" CornerRadius="4" Opacity="0.24" Visibility="Collapsed"
+                        Background="{DynamicResource {x:Static SystemColors.AccentColorBrushKey}}" />
+
+                <!-- Selection indicator: accent pill plus the backplate, never color alone. -->
                 <Border x:Name="Pill" Width="3" Height="16" CornerRadius="1.5" HorizontalAlignment="Left"
                         Background="{DynamicResource AccentFillColorDefaultBrush}" Visibility="Collapsed" />
                 <TextBlock x:Name="Priority" Text="{Binding PriorityText}" FontSize="12"
                            HorizontalAlignment="Center" VerticalAlignment="Center"
-                           Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
-                <TextBlock x:Name="Grip" Text="&#xE76F;" FontFamily="{StaticResource IconFont}" FontSize="12"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                <TextBlock x:Name="Grip" Text="&#xE76F;" FontFamily="{StaticResource IconFont}" FontSize="16"
                            HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Hidden"
                            Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
 
@@ -51,34 +64,35 @@
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0">
                   <TextBlock Text="{Binding StatusText}" FontSize="12" VerticalAlignment="Center"
-                             Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
-                  <TextBlock Text="{Binding StatusGlyph}" FontFamily="{StaticResource IconFont}" FontSize="12"
-                             Margin="6,0,0,0" VerticalAlignment="Center"
-                             Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
-                  <Border x:Name="MutedBadge" Visibility="Collapsed" CornerRadius="8" Padding="6,1" Margin="6,0,0,0"
+                             Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                  <TextBlock Text="{Binding StatusGlyph}" FontFamily="{StaticResource IconFont}" FontSize="16"
+                             Margin="8,0,0,0" VerticalAlignment="Center"
+                             Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                  <Border x:Name="MutedBadge" Visibility="Collapsed" CornerRadius="4" Padding="8,2" Margin="8,0,0,0"
                           VerticalAlignment="Center" Background="{DynamicResource SystemFillColorCriticalBrush}">
-                    <TextBlock Text="Muted" FontSize="11" FontWeight="SemiBold"
+                    <TextBlock Text="Muted" FontSize="12" FontWeight="SemiBold"
                                Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" />
                   </Border>
                 </StackPanel>
 
-                <Button x:Name="MoreButton" Grid.Column="3" Style="{StaticResource IconButton}" Width="28" Height="28"
-                        FontSize="14" Content="&#xE712;" Visibility="Hidden" Click="OnMoreClick"
-                        ToolTip="Device options" AutomationProperties.Name="Device options" />
+                <Button x:Name="MoreButton" Grid.Column="3" Style="{StaticResource IconButton}" Content="&#xE712;"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}" Click="OnMoreClick"
+                        ToolTip="Device options" AutomationProperties.Name="{Binding Name, StringFormat='Options for {0}'}" />
               </Grid>
             </Border>
 
             <DataTemplate.Triggers>
               <DataTrigger Binding="{Binding IsActive}" Value="True">
-                <Setter TargetName="Row" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                <Setter TargetName="Backplate" Property="Visibility" Value="Visible" />
                 <Setter TargetName="Pill" Property="Visibility" Value="Visible" />
+                <Setter TargetName="DeviceName" Property="FontWeight" Value="SemiBold" />
               </DataTrigger>
               <DataTrigger Binding="{Binding IsNeverUse}" Value="True">
                 <Setter TargetName="DeviceName" Property="TextDecorations" Value="Strikethrough" />
                 <Setter TargetName="DeviceName" Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
               </DataTrigger>
               <DataTrigger Binding="{Binding IsDisconnected}" Value="True">
-                <Setter TargetName="Row" Property="Opacity" Value="0.6" />
+                <Setter TargetName="DeviceName" Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
               </DataTrigger>
               <DataTrigger Binding="{Binding IsMuted}" Value="True">
                 <Setter TargetName="MutedBadge" Property="Visibility" Value="Visible" />
@@ -87,17 +101,17 @@
                 <Setter TargetName="Row" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
                 <Setter TargetName="Priority" Property="Visibility" Value="Hidden" />
                 <Setter TargetName="Grip" Property="Visibility" Value="Visible" />
-                <Setter TargetName="MoreButton" Property="Visibility" Value="Visible" />
               </Trigger>
               <MultiDataTrigger>
                 <MultiDataTrigger.Conditions>
                   <Condition Binding="{Binding IsActive}" Value="True" />
                   <Condition Binding="{Binding IsMouseOver, ElementName=Row}" Value="True" />
                 </MultiDataTrigger.Conditions>
-                <Setter TargetName="Row" Property="Background" Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
+                <Setter TargetName="Row" Property="Background" Value="Transparent" />
+                <Setter TargetName="Backplate" Property="Opacity" Value="0.32" />
               </MultiDataTrigger>
               <DataTrigger Binding="{Binding IsDragging}" Value="True">
-                <Setter TargetName="Row" Property="Opacity" Value="0.5" />
+                <Setter TargetName="Row" Property="Opacity" Value="0.6" />
                 <Setter TargetName="Row" Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
               </DataTrigger>
             </DataTemplate.Triggers>
