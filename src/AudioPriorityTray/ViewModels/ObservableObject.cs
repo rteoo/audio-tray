@@ -18,8 +18,11 @@ public abstract class ObservableObject : INotifyPropertyChanged
     protected void OnPropertyChanged(string? name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }
 
-/// <summary>One context-menu line; the view turns these into Fluent menu items.</summary>
-public sealed record MenuEntry(string Header, string? Glyph, Action? Execute, bool IsChecked = false, string? Hint = null)
+/// <summary>
+/// One context-menu line; the view turns these into Fluent menu items. A non-null
+/// <see cref="IsChecked"/> makes it a checkable item (mode choice, on/off setting).
+/// </summary>
+public sealed record MenuEntry(string Header, string? Glyph, Action? Execute, bool? IsChecked = null, string? Hint = null)
 {
     public static readonly MenuEntry Separator = new("-", null, null);
 
