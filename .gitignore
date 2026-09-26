@@ -69,3 +69,11 @@ Index/
 # xcode-build-server files
 buildServer.json
 .compile
+
+# .NET (Windows app)
+bin/
+obj/
+.vs/
+*.user
+TestResults/
+publish/

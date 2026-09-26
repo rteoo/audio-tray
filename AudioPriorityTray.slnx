@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AudioPriorityTray.Core/AudioPriorityTray.Core.csproj" />
+    <Project Path="src/AudioPriorityTray/AudioPriorityTray.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AudioPriorityTray.Core.Tests/AudioPriorityTray.Core.Tests.csproj" />
+  </Folder>
+</Solution>
