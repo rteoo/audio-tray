@@ -10,7 +10,10 @@ internal static class Menus
 {
     public static ContextMenu Create(IEnumerable<MenuEntry> entries)
     {
-        var menu = new ContextMenu();
+        // A ContextMenu inherits font properties from its placement target; an icon button would
+        // otherwise render every label in the icon font.
+        var menu = new ContextMenu { FontSize = 14 };
+        menu.SetResourceReference(Control.FontFamilyProperty, "UiFont");
         foreach (var entry in TrimSeparators(entries))
         {
             if (entry.IsSeparator)
@@ -19,7 +22,13 @@ internal static class Menus
                 continue;
             }
 
-            var item = new MenuItem { Header = entry.Header, IsChecked = entry.IsChecked, InputGestureText = entry.Hint ?? "" };
+            var item = new MenuItem
+            {
+                Header = entry.Header,
+                IsCheckable = entry.IsChecked is not null,
+                IsChecked = entry.IsChecked == true,
+                InputGestureText = entry.Hint ?? "",
+            };
             if (entry.Glyph is { } glyph)
                 item.Icon = new TextBlock { Text = glyph, FontFamily = Glyphs.FontFamily, FontSize = 16 };
             if (entry.Execute is { } execute)

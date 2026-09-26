@@ -1,17 +1,32 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:local="clr-namespace:AudioPriorityTray">
-  <!-- Colors come from WPF's Fluent theme (ThemeMode="System"), so light/dark and the user's
-       accent color follow Windows automatically. -->
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!-- Colors come from WPF's Fluent theme (ThemeMode="System"), so light/dark, contrast themes and
+       the Windows accent color are followed live. Sizes follow Windows Design System 1.0.0
+       (see DESIGN.md): 4px rhythm, 4px control / 8px overlay radius, Comfortable density. -->
 
+  <FontFamily x:Key="UiFont">Segoe UI Variable Text, Segoe UI</FontFamily>
   <FontFamily x:Key="IconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
   <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+
+  <!-- 2px focus ring with separation; custom templates below replace Fluent's, so they restore it. -->
+  <Style x:Key="FocusRing">
+    <Setter Property="Control.Template">
+      <Setter.Value>
+        <ControlTemplate>
+          <Border Margin="-3" BorderThickness="2" CornerRadius="6" SnapsToDevicePixels="True"
+                  BorderBrush="{DynamicResource FocusStrokeColorOuterBrush}" />
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
 
   <!-- WinUI "subtle" button: no chrome until hovered. -->
   <Style x:Key="SubtleButton" TargetType="Button">
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
-    <Setter Property="Padding" Value="8,5" />
+    <Setter Property="Padding" Value="12,0" />
+    <Setter Property="MinHeight" Value="40" />
+    <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRing}" />
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="Button">
@@ -35,29 +50,31 @@
   </Style>
 
   <Style x:Key="IconButton" TargetType="Button" BasedOn="{StaticResource SubtleButton}">
-    <Setter Property="Width" Value="32" />
-    <Setter Property="Height" Value="32" />
+    <Setter Property="Width" Value="40" />
+    <Setter Property="Height" Value="40" />
     <Setter Property="Padding" Value="0" />
     <Setter Property="FontFamily" Value="{StaticResource IconFont}" />
     <Setter Property="FontSize" Value="16" />
   </Style>
 
-  <!-- Quick Settings style tile: glyph in a rounded tile, label underneath, accent fill when on. -->
-  <Style x:Key="ModeTile" TargetType="Button">
+  <!-- Mode choice: a radio group drawn as Quick Settings tiles (glyph tile, caption below,
+       accent fill plus on-accent glyph when checked). -->
+  <Style x:Key="ModeTile" TargetType="RadioButton">
     <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+    <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRing}" />
     <Setter Property="Template">
       <Setter.Value>
-        <ControlTemplate TargetType="Button">
+        <ControlTemplate TargetType="RadioButton">
           <StackPanel Background="Transparent">
             <Border x:Name="Tile" Height="48" CornerRadius="4" BorderThickness="1"
                     Background="{DynamicResource ControlFillColorDefaultBrush}"
                     BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}">
               <TextBlock x:Name="Glyph" FontFamily="{StaticResource IconFont}" FontSize="16"
                          HorizontalAlignment="Center" VerticalAlignment="Center"
-                         Text="{Binding (local:Ui.Glyph), RelativeSource={RelativeSource TemplatedParent}}"
+                         Text="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}"
                          Foreground="{TemplateBinding Foreground}" />
             </Border>
-            <ContentPresenter HorizontalAlignment="Center" Margin="0,6,0,0" TextElement.FontSize="12" />
+            <ContentPresenter HorizontalAlignment="Center" Margin="0,8,0,0" TextElement.FontSize="12" />
           </StackPanel>
           <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
@@ -66,21 +83,21 @@
             <Trigger Property="IsPressed" Value="True">
               <Setter TargetName="Tile" Property="Background" Value="{DynamicResource ControlFillColorTertiaryBrush}" />
             </Trigger>
-            <Trigger Property="local:Ui.IsSelected" Value="True">
+            <Trigger Property="IsChecked" Value="True">
               <Setter TargetName="Tile" Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}" />
               <Setter TargetName="Tile" Property="BorderBrush" Value="{DynamicResource AccentControlElevationBorderBrush}" />
               <Setter TargetName="Glyph" Property="Foreground" Value="{DynamicResource TextOnAccentFillColorPrimaryBrush}" />
             </Trigger>
             <MultiTrigger>
               <MultiTrigger.Conditions>
-                <Condition Property="local:Ui.IsSelected" Value="True" />
+                <Condition Property="IsChecked" Value="True" />
                 <Condition Property="IsMouseOver" Value="True" />
               </MultiTrigger.Conditions>
               <Setter TargetName="Tile" Property="Background" Value="{DynamicResource AccentFillColorSecondaryBrush}" />
             </MultiTrigger>
             <MultiTrigger>
               <MultiTrigger.Conditions>
-                <Condition Property="local:Ui.IsSelected" Value="True" />
+                <Condition Property="IsChecked" Value="True" />
                 <Condition Property="IsPressed" Value="True" />
               </MultiTrigger.Conditions>
               <Setter TargetName="Tile" Property="Background" Value="{DynamicResource AccentFillColorTertiaryBrush}" />

@@ -78,7 +78,7 @@ public sealed class MainViewModel : ObservableObject
         _manager.SetMode(mode);
     }
 
-    public void ToggleCustomMode() => _manager.SetCustomMode(!_manager.IsCustomMode);
+    public void EnterManualMode() => _manager.SetCustomMode(true);
 
     public void ToggleEditMode() => _manager.ToggleEditMode();
 
@@ -105,7 +105,7 @@ public sealed class MainViewModel : ObservableObject
         [
             new("Speakers", null, () => SelectMode(OutputCategory.Speaker), IsChecked: IsSpeakerMode),
             new("Headphones", null, () => SelectMode(OutputCategory.Headphone), IsChecked: IsHeadphoneMode),
-            new("Manual", null, () => _manager.SetCustomMode(true), IsChecked: IsCustomMode),
+            new("Manual", null, EnterManualMode, IsChecked: IsCustomMode),
             MenuEntry.Separator,
             new("Sound settings", Glyphs.Settings, OpenSoundSettings),
             new("Start with Windows", null, () => LaunchAtLogin.SetEnabled(!LaunchAtLogin.IsEnabled), IsChecked: LaunchAtLogin.IsEnabled),

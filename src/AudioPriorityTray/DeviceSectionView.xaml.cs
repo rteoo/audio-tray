@@ -3,11 +3,16 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using AudioPriorityTray.ViewModels;
 
 namespace AudioPriorityTray;
 
-/// <summary>One device section; handles click-to-activate and drag-to-reorder of its rows.</summary>
+/// <summary>
+/// One device section. Rows are activated by click or Enter/Space, reordered by drag or
+/// Ctrl+Up/Down (the keyboard route the design system requires for every drag), and expose
+/// their actions through the always-visible "..." button, right-click, or Shift+F10.
+/// </summary>
 public partial class DeviceSectionView : UserControl
 {
     private DeviceRowViewModel? _pressed;
@@ -135,6 +140,60 @@ public partial class DeviceSectionView : UserControl
     {
         if (RowOf(sender) is { } row) Menus.Open(Section.BuildMenu(row), (UIElement)sender, PlacementMode.Bottom);
     }
+
+    private void OnRowKeyDown(object sender, KeyEventArgs e)
+    {
+        // Only when the row itself has focus; its "..." button handles its own keys.
+        if (e.OriginalSource is not Border { DataContext: DeviceRowViewModel row } element) return;
+
+        var index = Section.Rows.IndexOf(row);
+        var last = Section.Rows.Count - 1;
+        var control = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
+        var shift = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
+        var key = e.Key == Key.System ? e.SystemKey : e.Key;
+
+        switch (key)
+        {
+            case Key.Enter or Key.Space:
+                Section.Activate(row);
+                FocusDevice(row.Device.Id);
+                break;
+            case Key.Apps:
+            case Key.F10 when shift:
+                Menus.Open(Section.BuildMenu(row), element, PlacementMode.Bottom);
+                break;
+            case Key.Up when control && index > 0:
+                Section.Move(index, index - 1);
+                FocusDevice(row.Device.Id);
+                break;
+            case Key.Down when control && index < last:
+                Section.Move(index, index + 2);
+                FocusDevice(row.Device.Id);
+                break;
+            case Key.Up when !control && index > 0:
+                RowElement(index - 1)?.Focus();
+                break;
+            case Key.Down when !control && index < last:
+                RowElement(index + 1)?.Focus();
+                break;
+            default:
+                return;
+        }
+        e.Handled = true;
+    }
+
+    /// <summary>Refocuses a device after an action that may have rebuilt the rows.</summary>
+    private void FocusDevice(string deviceId) =>
+        Dispatcher.BeginInvoke(DispatcherPriority.Loaded, () =>
+        {
+            var index = Section.Rows.ToList().FindIndex(r => r.Device.Id == deviceId);
+            if (index >= 0) RowElement(index)?.Focus();
+        });
+
+    private Border? RowElement(int index) =>
+        Container(index) is { } container && VisualTreeHelper.GetChildrenCount(container) > 0
+            ? VisualTreeHelper.GetChild(container, 0) as Border
+            : null;
 
     private void OnRowRightClick(object sender, MouseButtonEventArgs e)
     {

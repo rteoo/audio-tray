@@ -28,12 +28,21 @@ dotnet run --project src/AudioPriorityTray
 dotnet publish src/AudioPriorityTray -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -o publish
 ```
 
+## CI and releases
+
+`.github/workflows/build.yml` builds and tests on every PR and push. Pushes to `main` replace the
+rolling `nightly` pre-release; pushing a `v*` tag publishes a versioned release (the tag sets the
+version). Assets are framework-dependent single-file exes for win-x64 and win-arm64.
+
 ## Conventions
 
 - `TreatWarningsAsErrors` is on for every project.
 - Core Audio callbacks arrive on worker threads; `WindowsAudioDeviceService` coalesces them and
   posts to the UI `SynchronizationContext`. `AudioManager` is single-threaded.
 - COM interface declarations must match SDK vtable order; only slots up to the last used method are declared.
+- UI follows Windows Design System 1.0.0; `DESIGN.md` records the mapping and deliberate
+  exceptions. Update it with any new role, deviation, or verified gate.
 - Colors come from Fluent theme resource keys via `DynamicResource`, never hard-coded, so light/dark
-  and the accent color track Windows.
+  and the accent color track Windows. A brush with a `DynamicResource` color can't be used from
+  template triggers (it throws at runtime); use `SystemColors.*BrushKey` or an inline element.
 - Only one instance runs (`Local\AudioPriorityTray` mutex). Kill the running tray app before `dotnet run`.
