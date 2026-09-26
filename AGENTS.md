@@ -1,8 +1,9 @@
 # AGENTS.md
 
-Fork of the macOS AudioPriorityBar, rebuilt as a native Windows 11 tray app. The Windows app is the
-live product; the Swift sources under `AudioPriorityBar/` are the original macOS app, kept as the
-behavioral reference.
+Native Windows 11 tray app that keeps the highest-priority connected audio device as the Windows
+default. Rebuilt from the macOS AudioPriorityBar (github.com/tobi/AudioPriorityBar); the Swift
+sources were removed from this repo, and its git history holds them if the original behavior
+needs checking.
 
 ## Stack
 
@@ -13,9 +14,8 @@ behavioral reference.
 
 ## Layout
 
-- `src/AudioPriorityTray.Core/` — UI-free logic: `AudioManager` (auto-switch policy, ported from the
-  Swift `AudioManager`), `SettingsStore` (JSON in `%LOCALAPPDATA%\AudioPriorityTray\`),
-  `WindowsAudioDeviceService` + `Interop/` (Core Audio).
+- `src/AudioPriorityTray.Core/` — UI-free logic: `AudioManager` (auto-switch policy), `SettingsStore`
+  (JSON in `%LOCALAPPDATA%\AudioPriorityTray\`), `WindowsAudioDeviceService` + `Interop/` (Core Audio).
 - `src/AudioPriorityTray/` — WPF app: tray icon (raw `Shell_NotifyIcon`), Acrylic flyout, view models.
 - `tests/AudioPriorityTray.Core.Tests/` — behavior tests against `FakeAudioDeviceService`.
 

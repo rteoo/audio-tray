@@ -9,7 +9,7 @@ speakers, headphones, and microphones; the app keeps the highest-priority connec
 Windows default, and switches when devices come and go.
 
 This is a Windows rebuild of [AudioPriorityBar](https://github.com/tobi/AudioPriorityBar), a macOS
-menu bar app. The original Swift sources remain in `AudioPriorityBar/`.
+menu bar app with the same priority model.
 
 ![Windows 11](https://img.shields.io/badge/Windows-11-blue)
 ![.NET](https://img.shields.io/badge/.NET-10-purple)
@@ -103,7 +103,6 @@ dotnet run --project src/AudioPriorityTray
 src/AudioPriorityTray.Core/     UI-free logic: AudioManager, SettingsStore, Core Audio interop
 src/AudioPriorityTray/          WPF app: tray icon, flyout, view models
 tests/AudioPriorityTray.Core.Tests/
-AudioPriorityBar/               original macOS app (Swift)
 ```
 
 ## License
