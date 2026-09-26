@@ -1,114 +1,110 @@
-# Audio Priority Bar
+# Audio Priority for Windows
 
 <p align="center">
-  <img src="icon.png" width="128" height="128" alt="Audio Priority Bar Icon">
+  <img src="icon.png" width="128" height="128" alt="Audio Priority icon">
 </p>
 
-A native macOS menu bar app that automatically manages audio device priorities. Set your preferred order for speakers, headphones, and microphones - the app automatically switches to the highest-priority connected device.
+A native Windows 11 system-tray app that manages audio device priorities automatically. Rank your
+speakers, headphones, and microphones; the app keeps the highest-priority connected device as the
+Windows default, and switches when devices come and go.
 
-![macOS 13+](https://img.shields.io/badge/macOS-13%2B-blue)
-![Swift](https://img.shields.io/badge/Swift-5.9-orange)
+This is a Windows rebuild of [AudioPriorityBar](https://github.com/tobi/AudioPriorityBar), a macOS
+menu bar app with the same priority model.
+
+![Windows 11](https://img.shields.io/badge/Windows-11-blue)
+![.NET](https://img.shields.io/badge/.NET-10-purple)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-![Screenshot](screenshot.jpeg)
+<p align="center"><img src="screenshot-windows.png" width="360" alt="Audio Priority flyout"></p>
 
 ## Features
 
-- **Priority-based auto-switching**: Devices are ranked by priority. When a higher-priority device connects, it automatically becomes active.
-- **Separate speaker/headphone modes**: Output devices are categorized as either speakers or headphones, each with their own priority list.
-- **Manual override**: Enable "Custom" mode (hand icon) to disable auto-switching and select devices freely.
-- **Device memory**: Remembers all devices you've ever connected, even when disconnected. Edit mode shows disconnected devices with "last seen" timestamps.
-- **Per-category ignore**: Hide devices from specific categories without affecting others.
-- **Drag-to-reorder**: Reorder devices by dragging or using up/down arrows.
-- **Volume control**: Adjust volume with slider or scroll wheel.
-- **Menu bar integration**: Shows current mode icon and volume percentage.
+- **Priority-based auto-switching**: when a higher-priority device connects, it becomes the Windows
+  default for all roles (console, multimedia, and communications).
+- **Speaker and headphone modes**: outputs are either speakers or headphones, each with its own
+  priority list. Connecting a new headphone switches to headphone mode; unplugging the last one
+  switches back to speakers.
+- **Headphone detection that works in any language**: devices are classified by the form factor the
+  driver reports (headphones or headset), with a name-keyword fallback. Localized names like
+  "Fones de ouvido" still classify correctly.
+- **Manual mode**: turns off auto-switching so you pick devices yourself.
+- **Device memory**: remembers every device ever connected. Edit mode shows disconnected devices
+  with "last seen" times, so you can rank them before they're plugged in.
+- **Ignore and never use**: hide a device from one category, from both, or exclude it from
+  auto-selection entirely.
+- **Drag to reorder**: drag rows, or use Move up/Move down from the row menu.
+- **Volume**: slider or mouse wheel (2% per notch) for the default output.
+- **Windows 11 design**: Acrylic flyout, Fluent controls, light/dark and accent color that follow
+  Windows, and a monochrome tray glyph that reflects mode, volume, and mute.
+- **Start with Windows**: per-user, and respects the toggle in Task Manager's startup apps.
 
-## Installation
+## Install
 
 ### Requirements
-- macOS 13.0 (Ventura) or later
 
-### Build from Source
+- Windows 11 (Windows 10 is untested; it would lack the Acrylic backdrop)
+- [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0)
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/tobi/AudioPriorityBar.git
-   cd AudioPriorityBar
-   ```
+### Build from source
 
-2. Build using the build script:
-   ```bash
-   ./build.sh
-   ```
+Requires the .NET 10 SDK.
 
-3. The app will be at `dist/AudioPriorityBar.app`
+```bash
+git clone https://github.com/rteoo/audio-tray.git
+cd audio-tray
+dotnet publish src/AudioPriorityTray -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -o publish
+```
 
-Or open `AudioPriorityBar.xcodeproj` in Xcode and build with ⌘R.
+Run `publish\AudioPriorityTray.exe`. Windows 11 puts new tray icons in the overflow (^) menu; drag
+it onto the taskbar, or enable it under **Settings → Personalization → Taskbar → Other system tray
+icons**.
 
-### Download Release
-Check the [Releases](https://github.com/tobi/AudioPriorityBar/releases) page for pre-built binaries.
+For a build that doesn't need the runtime installed, use `--self-contained true` (larger exe).
 
 ## Usage
 
-### Modes
+| Mode | Behavior |
+|------|----------|
+| **Speakers** | Shows speaker devices; the top connected one is the default output |
+| **Headphones** | Shows headphone devices; the top connected one is the default output |
+| **Manual** | Shows all devices; click one to make it the default, no auto-switching |
 
-| Mode | Icon | Behavior |
-|------|------|----------|
-| **Speakers** | 🔊 | Shows speaker devices, auto-switches to highest priority |
-| **Headphones** | 🎧 | Shows headphone devices, auto-switches to highest priority |
-| **Custom** | ✋ | Shows all devices, no auto-switching |
+Microphones always follow their own priority list, except in Manual mode.
 
-### Managing Priorities
+- **Left-click the tray icon** to open the flyout. **Right-click** for mode shortcuts, Sound settings,
+  Start with Windows, and Quit.
+- **Click a device** to move it to the top (automatic modes) or select it (Manual mode).
+- **Right-click a device**, or use its **⋯** button, to move it between Speakers and Headphones,
+  ignore it, reorder it, mark it Never use, or forget a disconnected device.
+- **Edit** shows every device ever seen, including disconnected and ignored ones.
 
-- **Click a device**: Moves it to #1 priority (in normal mode) or just selects it (in custom mode)
-- **Drag devices**: Reorder by dragging the handle
-- **Up/Down arrows**: Fine-tune order on hover
+In automatic modes the app enforces the ranking: if something else changes the default device, the
+app switches back to the top-priority one. Use Manual mode to pick freely.
 
-### Device Actions (hover menu)
+## How it works
 
-- **Move to Speakers/Headphones**: Change device category
-- **Ignore as [category]**: Hide from current category only
-- **Ignore entirely**: Hide from both speaker and headphone lists
-- **Forget Device**: Remove disconnected device from memory
+1. **Device discovery**: Windows Core Audio (`IMMDeviceEnumerator`) enumerates endpoints and
+   notifies on connects, disconnects, and default changes.
+2. **Switching**: the default endpoint is set through `IPolicyConfig`, the long-stable interface every
+   Windows audio switcher uses (Windows has no public API for it).
+3. **Storage**: priorities, categories, and device memory live in
+   `%LOCALAPPDATA%\AudioPriorityTray\settings.json`, keyed by endpoint ID, which is stable across
+   reconnects. Logs go to `app.log` in the same folder.
 
-### Edit Mode
+## Development
 
-Click "Edit" in the footer to:
-- See all devices ever connected (disconnected ones grayed out)
-- Reorder disconnected devices in the priority list
-- View "last seen" timestamps
-- Forget old devices you no longer use
-
-## How It Works
-
-1. **Device Discovery**: Uses CoreAudio to enumerate audio devices and listen for changes.
-2. **Priority Storage**: Device priorities are stored in UserDefaults, keyed by device UID (stable across reconnects).
-3. **Auto-Switching**: When devices connect/disconnect, the app automatically selects the highest-priority available device for the current mode.
-4. **Categories**: Each output device is assigned to either "speaker" or "headphone" category, with separate priority lists.
-
-## Project Structure
-
-```
-AudioPriorityBar/
-├── AudioPriorityBarApp.swift    # App entry, MenuBarExtra, AudioManager
-├── Models/
-│   └── AudioDevice.swift        # Device model, OutputCategory enum
-├── Services/
-│   ├── AudioDeviceService.swift # CoreAudio wrapper
-│   └── PriorityManager.swift    # Priority persistence
-└── Views/
-    ├── MenuBarView.swift        # Main popover UI
-    └── DeviceListView.swift     # Device list and row components
+```bash
+dotnet build AudioPriorityTray.slnx
+dotnet test --project tests/AudioPriorityTray.Core.Tests
+dotnet run --project src/AudioPriorityTray
 ```
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+```
+src/AudioPriorityTray.Core/     UI-free logic: AudioManager, SettingsStore, Core Audio interop
+src/AudioPriorityTray/          WPF app: tray icon, flyout, view models
+tests/AudioPriorityTray.Core.Tests/
+```
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
-
-## Acknowledgments
-
-Built with SwiftUI and CoreAudio for macOS.
+MIT. See [LICENSE](LICENSE).
