@@ -41,32 +41,44 @@ menu bar app with the same priority model.
 
 ## Install
 
-### Requirements
+Requires Windows 11 (Windows 10 is untested; it would lack the Acrylic backdrop).
 
-- Windows 11 (Windows 10 is untested; it would lack the Acrylic backdrop)
-- [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0)
+### Installer (recommended)
 
-### Download
+Download `AudioPrioritySetup-<version>-x64.exe` (or `-arm64.exe`) from
+[Releases](https://github.com/rteoo/audio-tray/releases) and run it. It installs per user (no admin
+prompt) into `%LOCALAPPDATA%\Programs\Audio Priority`, includes .NET, adds a Start menu entry, and
+can start the app with Windows. Uninstall from **Settings → Apps**; your settings in
+`%LOCALAPPDATA%\AudioPriorityTray` are kept. Tagged versions are stable; **nightly** tracks the
+latest `main`. Builds are unsigned, so SmartScreen may warn on first run.
 
-Grab `AudioPriorityTray-win-x64.exe` (or `-win-arm64.exe`) from
-[Releases](https://github.com/rteoo/audio-tray/releases). Tagged versions are stable; **nightly**
-tracks the latest `main`. The exe is unsigned, so SmartScreen may warn on first run.
+The portable `AudioPriorityTray-win-*.exe` on the same page needs the
+[.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0).
+
+Windows 11 puts new tray icons in the overflow (^) menu; drag it onto the taskbar, or enable it under
+**Settings → Personalization → Taskbar → Other system tray icons**.
 
 ### Build from source
 
-Requires the .NET 10 SDK.
+Requires the .NET 10 SDK; the installer also needs [Inno Setup 6](https://jrsoftware.org/isinfo.php),
+and the Store package the Windows SDK (`makeappx`).
 
 ```bash
 git clone https://github.com/rteoo/audio-tray.git
 cd audio-tray
-dotnet publish src/AudioPriorityTray -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -o publish
+pwsh packaging/build.ps1 -Runtime win-x64
 ```
 
-Run `publish\AudioPriorityTray.exe`. Windows 11 puts new tray icons in the overflow (^) menu; drag
-it onto the taskbar, or enable it under **Settings → Personalization → Taskbar → Other system tray
-icons**.
+This publishes a self-contained build and writes `artifacts\installer\AudioPrioritySetup-<version>-x64.exe`.
 
-For a build that doesn't need the runtime installed, use `--self-contained true` (larger exe).
+### Microsoft Store package
+
+`pwsh packaging/build.ps1 -Msix -IdentityName <name> -Publisher "CN=<id>" -PublisherDisplayName <publisher>`
+writes an unsigned `artifacts\msix\AudioPriority-<version>.0-<arch>.msix`, using the identity values
+from Partner Center → Product identity; Partner Center signs it on upload. CI builds it too when the
+`AUDIOPRIORITY_MSIX_IDENTITY_NAME`, `AUDIOPRIORITY_MSIX_PUBLISHER` and
+`AUDIOPRIORITY_MSIX_PUBLISHER_DISPLAY_NAME` repository variables are set (optionally
+`AUDIOPRIORITY_MSIX_DISPLAY_NAME` if the reserved name isn't "Audio Priority").
 
 ## Usage
 

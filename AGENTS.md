@@ -28,11 +28,26 @@ dotnet run --project src/AudioPriorityTray
 dotnet publish src/AudioPriorityTray -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -o publish
 ```
 
+## Packaging
+
+`packaging/build.ps1 -Runtime win-x64|win-arm64 [-Version x.y.z] [-Msix ...]` publishes self-contained
+into `artifacts/publish/`, compiles `packaging/AudioPriorityTray.iss` (Inno Setup, per-user, fixed
+AppId) and optionally packs `packaging/AppxManifest.xml` + `packaging/Assets/` with `makeappx`.
+
+- The installer's startup task writes the same `HKCU\...\Run\AudioPriorityTray` value as the app's
+  toggle, and uninstall always removes it. The AppId GUID must never change.
+- Store rules: the MSIX version's fourth field stays `0` and versions must increase; every
+  DisplayName must equal the Partner Center reserved name; `runFullTrust` needs a justification in
+  the submission; the MSIX is uploaded unsigned. Packaged builds can't use the Run key
+  (`LaunchAtLogin.IsManagedByWindows`); the manifest's opt-in `startupTask` is used instead.
+
 ## CI and releases
 
 `.github/workflows/build.yml` builds and tests on every PR and push. Pushes to `main` replace the
 rolling `nightly` pre-release; pushing a `v*` tag publishes a versioned release (the tag sets the
-version). Assets are framework-dependent single-file exes for win-x64 and win-arm64.
+version). Assets: per-user installers and portable framework-dependent exes for win-x64 and
+win-arm64. The Store MSIX is a build artifact only, produced when the `AUDIOPRIORITY_MSIX_*`
+repository variables are set.
 
 ## Conventions
 

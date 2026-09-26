@@ -107,14 +107,16 @@ public sealed class MainViewModel : ObservableObject
             new("Headphones", null, () => SelectMode(OutputCategory.Headphone), IsChecked: IsHeadphoneMode),
             new("Manual", null, EnterManualMode, IsChecked: IsCustomMode),
             MenuEntry.Separator,
-            new("Sound settings", Glyphs.Settings, OpenSoundSettings),
-            new("Start with Windows", null, () => LaunchAtLogin.SetEnabled(!LaunchAtLogin.IsEnabled), IsChecked: LaunchAtLogin.IsEnabled),
+            new("Sound settings", Glyphs.Settings, () => OpenSettings("ms-settings:sound")),
+            LaunchAtLogin.IsManagedByWindows
+                ? new("Startup apps settings", null, () => OpenSettings("ms-settings:startupapps"))
+                : new("Start with Windows", null, () => LaunchAtLogin.SetEnabled(!LaunchAtLogin.IsEnabled), IsChecked: LaunchAtLogin.IsEnabled),
             MenuEntry.Separator,
             new("Quit", Glyphs.Close, quit),
         ]);
         return entries;
     }
 
-    private static void OpenSoundSettings() =>
-        Process.Start(new ProcessStartInfo("ms-settings:sound") { UseShellExecute = true });
+    private static void OpenSettings(string uri) =>
+        Process.Start(new ProcessStartInfo(uri) { UseShellExecute = true });
 }
