@@ -194,21 +194,34 @@ public sealed class SettingsStore
 
     // MARK: Persistence
 
+    // Each mode keeps its own microphone profile (order and ignored mics), so the speaker setup's
+    // mic and the headset's mic are ranked independently; PriorityList.Input means the current mode's.
+    private bool IsHeadphoneMode => _data.CurrentMode == OutputCategory.Headphone;
+
     private List<string> Priorities(PriorityList list) => list switch
     {
-        PriorityList.Input => _data.InputPriorities,
+        PriorityList.Input => IsHeadphoneMode ? _data.HeadphoneInputPriorities! : _data.InputPriorities,
         PriorityList.Speaker => _data.SpeakerPriorities,
         _ => _data.HeadphonePriorities,
     };
 
     private List<string> HiddenIds(PriorityList list) => list switch
     {
-        PriorityList.Input => _data.HiddenMics,
+        PriorityList.Input => IsHeadphoneMode ? _data.HiddenHeadphoneMics! : _data.HiddenMics,
         PriorityList.Speaker => _data.HiddenSpeakers,
         _ => _data.HiddenHeadphones,
     };
 
     private static SettingsData Load(string path)
+    {
+        var data = Read(path);
+        // Settings from before per-mode microphones had one shared profile; both modes start from it.
+        data.HeadphoneInputPriorities ??= [.. data.InputPriorities];
+        data.HiddenHeadphoneMics ??= [.. data.HiddenMics];
+        return data;
+    }
+
+    private static SettingsData Read(string path)
     {
         if (!File.Exists(path)) return new SettingsData();
         try
@@ -235,13 +248,17 @@ public sealed class SettingsStore
 
     private sealed class SettingsData
     {
+        /// <summary>Speaker mode's microphone order (the name predates per-mode profiles).</summary>
         public List<string> InputPriorities { get; set; } = [];
+        /// <summary>Null only in settings written before per-mode profiles; <see cref="Load"/> fills it.</summary>
+        public List<string>? HeadphoneInputPriorities { get; set; }
         public List<string> SpeakerPriorities { get; set; } = [];
         public List<string> HeadphonePriorities { get; set; } = [];
         public Dictionary<string, OutputCategory> DeviceCategories { get; set; } = [];
         public OutputCategory CurrentMode { get; set; } = OutputCategory.Speaker;
         public bool CustomMode { get; set; }
         public List<string> HiddenMics { get; set; } = [];
+        public List<string>? HiddenHeadphoneMics { get; set; }
         public List<string> HiddenSpeakers { get; set; } = [];
         public List<string> HiddenHeadphones { get; set; } = [];
         public List<string> NeverUse { get; set; } = [];

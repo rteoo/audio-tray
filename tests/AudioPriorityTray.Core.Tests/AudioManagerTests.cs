@@ -143,6 +143,43 @@ public sealed class AudioManagerTests : IDisposable
     }
 
     [Fact]
+    public void Each_mode_keeps_its_own_microphone_order()
+    {
+        _store.CurrentMode = OutputCategory.Speaker;
+        var service = new FakeAudioDeviceService().With(
+            Output("desk", "Desk Speakers"), Output("hp", "Headphones (G522)"), Input("webcam"), Input("headset-mic"));
+        var manager = Start(service);
+        Assert.Equal("webcam", service.DefaultInput);
+
+        manager.SetMode(OutputCategory.Headphone);
+        manager.MoveDevice(PriorityList.Input, from: 1, to: 0);
+        Assert.Equal("headset-mic", service.DefaultInput);
+
+        manager.SetMode(OutputCategory.Speaker);
+
+        Assert.Equal(["webcam", "headset-mic"], manager.InputDevices.Select(d => d.Id));
+        Assert.Equal("webcam", service.DefaultInput);
+    }
+
+    [Fact]
+    public void Connecting_headphones_selects_the_headphone_modes_microphone()
+    {
+        _store.SavePriorities([Input("webcam"), Input("headset-mic")], PriorityList.Input);
+        _store.CurrentMode = OutputCategory.Headphone;
+        _store.SavePriorities([Input("headset-mic"), Input("webcam")], PriorityList.Input);
+        _store.CurrentMode = OutputCategory.Speaker;
+        var service = new FakeAudioDeviceService().With(Output("desk", "Desk Speakers"), Input("webcam"), Input("headset-mic"));
+        var manager = Start(service);
+        Assert.Equal("webcam", service.DefaultInput);
+
+        service.Connect(Output("hp", "Headphones (G522)"));
+
+        Assert.Equal(OutputCategory.Headphone, manager.CurrentMode);
+        Assert.Equal("headset-mic", service.DefaultInput);
+        Assert.Equal(["headset-mic", "webcam"], manager.InputDevices.Select(d => d.Id));
+    }
+
+    [Fact]
     public void Reordering_an_inactive_category_does_not_switch_output()
     {
         var service = new FakeAudioDeviceService().With(Output("desk", "Desk Speakers"), Output("hp1", "Headset A"), Output("hp2", "Headset B"));
