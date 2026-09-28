@@ -32,6 +32,33 @@ public sealed class SettingsStoreTests : IDisposable
     }
 
     [Fact]
+    public void Settings_from_before_per_mode_microphones_seed_both_modes()
+    {
+        File.WriteAllText(SettingsPath, """{ "inputPriorities": ["usb", "webcam"], "hiddenMics": ["webcam"] }""");
+        var webcam = FakeAudioDeviceService.Input("webcam");
+
+        var store = new SettingsStore(SettingsPath);
+        store.CurrentMode = OutputCategory.Headphone;
+
+        Assert.Equal(["usb", "webcam"], store.SortByPriority([webcam, FakeAudioDeviceService.Input("usb")], PriorityList.Input).Select(d => d.Id));
+        Assert.True(store.IsHidden(webcam, PriorityList.Input));
+    }
+
+    [Fact]
+    public void Hiding_a_microphone_only_affects_the_current_mode()
+    {
+        var headsetMic = FakeAudioDeviceService.Input("headset-mic");
+        var store = new SettingsStore(SettingsPath);
+        store.HideDevice(headsetMic, PriorityList.Input);
+
+        store.CurrentMode = OutputCategory.Headphone;
+
+        Assert.False(store.IsHidden(headsetMic, PriorityList.Input));
+        store.CurrentMode = OutputCategory.Speaker;
+        Assert.True(new SettingsStore(SettingsPath).IsHidden(headsetMic, PriorityList.Input));
+    }
+
+    [Fact]
     public void Unreadable_settings_are_set_aside_instead_of_crashing()
     {
         File.WriteAllText(SettingsPath, "{ not json");

@@ -88,7 +88,9 @@ from Partner Center → Product identity; Partner Center signs it on upload. CI 
 | **Headphones** | Shows headphone devices; the top connected one is the default output |
 | **Manual** | Shows all devices; click one to make it the default, no auto-switching |
 
-Microphones always follow their own priority list, except in Manual mode.
+Speakers and Headphones each keep their own microphone priority list and ignored microphones, so
+reordering mics in one mode never changes the other. Switching modes (including automatically, when
+headphones connect or disconnect) applies that mode's top microphone, except in Manual mode.
 
 - **Left-click the tray icon** to open the flyout. **Right-click** for mode shortcuts, Sound settings,
   Start with Windows, and Quit.

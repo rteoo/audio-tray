@@ -80,10 +80,22 @@ public sealed class AudioManager : IDisposable
 
     public void SetMode(OutputCategory mode)
     {
-        CurrentMode = mode;
-        Store.CurrentMode = mode;
-        if (!IsCustomMode) ApplyHighestPriorityOutput();
+        ChangeMode(mode);
+        if (!IsCustomMode)
+        {
+            ApplyHighestPriority(PriorityList.Input);
+            ApplyHighestPriorityOutput();
+        }
+        RefreshVolumeAndMute();
         RaiseChanged();
+    }
+
+    /// <summary>Each mode has its own microphone profile, so the input list is re-read for the new mode.</summary>
+    private void ChangeMode(OutputCategory mode)
+    {
+        if (mode == CurrentMode) return;
+        CurrentMode = Store.CurrentMode = mode;
+        RefreshDevices();
     }
 
     public void SetCustomMode(bool enabled)
@@ -335,11 +347,11 @@ public sealed class AudioManager : IDisposable
 
         if (CurrentMode != OutputCategory.Headphone && connectedHeadphones.Any(d => newlyConnected.Contains(d.Id)))
         {
-            CurrentMode = Store.CurrentMode = OutputCategory.Headphone;
+            ChangeMode(OutputCategory.Headphone);
         }
         else if (CurrentMode == OutputCategory.Headphone && connectedHeadphones.Count == 0 && hasConnectedSpeakers)
         {
-            CurrentMode = Store.CurrentMode = OutputCategory.Speaker;
+            ChangeMode(OutputCategory.Speaker);
         }
     }
 
@@ -350,7 +362,7 @@ public sealed class AudioManager : IDisposable
     private void AdoptModeOfCurrentOutput()
     {
         if (HeadphoneDevices.Any(d => d.Id == CurrentOutputId))
-            CurrentMode = Store.CurrentMode = OutputCategory.Headphone;
+            ChangeMode(OutputCategory.Headphone);
     }
 
     private void OnMuteOrVolumeChanged(object? sender, EventArgs e)
