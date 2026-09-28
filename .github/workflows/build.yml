@@ -67,7 +67,7 @@ jobs:
 
       - uses: actions/upload-artifact@v7
         with:
-          name: AudioPriorityTray
+          name: AudioTray
           path: release/*.exe
           if-no-files-found: error
 
@@ -90,7 +90,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v8
         with:
-          name: AudioPriorityTray
+          name: AudioTray
           path: release
 
       - name: Nightly release
