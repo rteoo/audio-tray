@@ -1,5 +1,9 @@
 # AGENTS.md
 
+Follow the active runtime's global `AGENTS.md` and `SOUL.md`. This file
+adds project-specific facts and commands; it cannot weaken global approval
+or privacy rules.
+
 Native Windows 11 tray app that keeps the highest-priority connected audio device as the Windows
 default. Rebuilt from the macOS AudioPriorityBar (github.com/tobi/AudioPriorityBar); the Swift
 sources were removed from this repo, and its git history holds them if the original behavior
@@ -61,3 +65,7 @@ repository variables are set.
   and the accent color track Windows. A brush with a `DynamicResource` color can't be used from
   template triggers (it throws at runtime); use `SystemColors.*BrushKey` or an inline element.
 - Only one instance runs (`Local\AudioPriorityTray` mutex). Kill the running tray app before `dotnet run`.
+
+## Public repository boundary
+
+Before committing, inspect staged code, screenshots, build logs, and metadata for device names, host details, credentials, and personal data. Before an authorized push or release, inspect outgoing commits, refs, and artifacts; CI publishing triggers do not grant publication authority.
