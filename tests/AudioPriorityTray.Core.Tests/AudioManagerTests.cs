@@ -51,19 +51,6 @@ public sealed class AudioManagerTests : IDisposable
     }
 
     [Fact]
-    public void Connecting_headphones_switches_to_headphone_mode_and_selects_them()
-    {
-        var service = new FakeAudioDeviceService().With(Output("desk", "Desk Speakers"));
-        var manager = Start(service);
-
-        service.Connect(Output("bt", "Headphones (WH-1000XM5)"));
-
-        Assert.Equal(OutputCategory.Headphone, manager.CurrentMode);
-        Assert.Equal("bt", service.DefaultOutput);
-        Assert.Equal(OutputCategory.Headphone, _store.CurrentMode);
-    }
-
-    [Fact]
     public void Disconnecting_the_last_headphone_returns_to_speaker_mode()
     {
         var service = new FakeAudioDeviceService().With(Output("desk", "Desk Speakers"));
@@ -162,7 +149,7 @@ public sealed class AudioManagerTests : IDisposable
     }
 
     [Fact]
-    public void Connecting_headphones_selects_the_headphone_modes_microphone()
+    public void Connecting_headphones_switches_to_headphone_mode_and_its_devices()
     {
         _store.SavePriorities([Input("webcam"), Input("headset-mic")], PriorityList.Input);
         _store.CurrentMode = OutputCategory.Headphone;
@@ -175,6 +162,8 @@ public sealed class AudioManagerTests : IDisposable
         service.Connect(Output("hp", "Headphones (G522)"));
 
         Assert.Equal(OutputCategory.Headphone, manager.CurrentMode);
+        Assert.Equal(OutputCategory.Headphone, _store.CurrentMode);
+        Assert.Equal("hp", service.DefaultOutput);
         Assert.Equal("headset-mic", service.DefaultInput);
         Assert.Equal(["headset-mic", "webcam"], manager.InputDevices.Select(d => d.Id));
     }
@@ -257,17 +246,21 @@ public sealed class AudioManagerTests : IDisposable
     }
 
     [Fact]
-    public void Mute_state_is_tracked_per_device_and_for_the_active_output()
+    public void System_events_track_mute_state_and_raise_changed()
     {
         var service = new FakeAudioDeviceService().With(Output("desk"), Input("mic"));
         var manager = Start(service);
+        var raised = 0;
+        manager.Changed += (_, _) => raised++;
 
+        service.Connect(Output("hdmi"));
         service.SetMuted("desk", true);
         service.SetMuted("mic", true);
 
         Assert.True(manager.IsActiveOutputMuted);
         Assert.True(manager.IsDeviceMuted(Output("desk")));
         Assert.True(manager.IsDeviceMuted(Input("mic")));
+        Assert.Equal(3, raised);
     }
 
     [Fact]
@@ -280,19 +273,5 @@ public sealed class AudioManagerTests : IDisposable
 
         Assert.Equal(1f, manager.Volume);
         Assert.Equal(1f, service.GetOutputVolume());
-    }
-
-    [Fact]
-    public void Changed_is_raised_for_system_events()
-    {
-        var service = new FakeAudioDeviceService().With(Output("desk"));
-        var manager = Start(service);
-        var raised = 0;
-        manager.Changed += (_, _) => raised++;
-
-        service.Connect(Output("hdmi"));
-        service.SetMuted("desk", true);
-
-        Assert.Equal(2, raised);
     }
 }
