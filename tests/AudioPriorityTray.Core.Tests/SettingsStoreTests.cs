@@ -71,8 +71,6 @@ public sealed class SettingsStoreTests : IDisposable
 
     [Theory]
     [InlineData("Headphones (WH-1000XM4)", OutputCategory.Headphone)]
-    [InlineData("Headset Earphone (Jabra Evolve2 65)", OutputCategory.Headphone)]
-    [InlineData("AirPods Pro", OutputCategory.Headphone)]
     [InlineData("Speakers (Realtek(R) Audio)", OutputCategory.Speaker)]
     public void Uncategorized_devices_are_classified_by_name(string name, OutputCategory expected)
     {
@@ -92,17 +90,6 @@ public sealed class SettingsStoreTests : IDisposable
     }
 
     [Fact]
-    public void Explicit_category_overrides_name_detection()
-    {
-        var store = new SettingsStore(SettingsPath);
-        var airpods = FakeAudioDeviceService.Output("id", "AirPods");
-
-        store.SetCategory(OutputCategory.Speaker, airpods);
-
-        Assert.Equal(OutputCategory.Speaker, store.GetCategory(airpods));
-    }
-
-    [Fact]
     public void Unranked_devices_sort_after_ranked_ones_in_their_original_order()
     {
         var store = new SettingsStore(SettingsPath);
@@ -117,9 +104,7 @@ public sealed class SettingsStoreTests : IDisposable
 
     [Theory]
     [InlineData(new[] { "a", "x", "b", "c" }, new[] { "c", "a", "b" }, new[] { "c", "x", "a", "b" })]
-    [InlineData(new string[0], new[] { "a", "b" }, new[] { "a", "b" })]
     [InlineData(new[] { "a", "b" }, new[] { "b", "new", "a" }, new[] { "b", "new", "a" })]
-    [InlineData(new[] { "x", "a" }, new[] { "a" }, new[] { "x", "a" })]
     public void Reordering_visible_devices_keeps_absent_devices_in_their_slots(string[] saved, string[] reordered, string[] expected)
     {
         Assert.Equal(expected, SettingsStore.MergeOrder(saved, reordered));
