@@ -128,6 +128,12 @@ src/AudioPriorityTray/          WPF app: tray icon, flyout, view models
 tests/AudioPriorityTray.Core.Tests/
 ```
 
+## Windows release preparation
+
+See [RELEASE-WINDOWS.md](RELEASE-WINDOWS.md) for the clean-checkout dry run,
+native Windows artifact preparation, hash verification, and required follow-up
+release gates.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
