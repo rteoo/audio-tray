@@ -108,9 +108,10 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
           # Creating a release in the GitHub UI also pushes its tag, so the release may already
-          # exist; attach the assets to it instead of failing.
+          # exist; attach the assets to it instead of failing. Never replace assets a release
+          # already has: a re-run would swap binaries people have downloaded, so it fails instead.
           if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" release/*.exe --clobber
+            gh release upload "$GITHUB_REF_NAME" release/*.exe
           else
             gh release create "$GITHUB_REF_NAME" release/*.exe \
               --verify-tag \
