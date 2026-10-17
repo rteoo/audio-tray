@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls.Primitives;
@@ -18,33 +17,33 @@ namespace AudioPriorityTray;
 /// </summary>
 public partial class FlyoutWindow : Window
 {
-    // Clicking the tray icon while the flyout is open deactivates (hides) it first and then
-    // arrives as a tray click; inside this window that click must not reopen it.
-    private static readonly TimeSpan ReopenGuard = TimeSpan.FromMilliseconds(300);
-
     private readonly MainViewModel _viewModel;
     private readonly Action _quit;
+    private readonly Func<RECT?> _trayIconBounds;
     private IntPtr _hwnd;
     private POINT _anchor;
-    private long _hiddenAt;
+    private bool _dismissedByTrayPress;
     private double _entranceOffset = 12;
 
-    public FlyoutWindow(MainViewModel viewModel, Action quit)
+    internal FlyoutWindow(MainViewModel viewModel, Action quit, Func<RECT?> trayIconBounds)
     {
         InitializeComponent();
         DataContext = _viewModel = viewModel;
         _quit = quit;
+        _trayIconBounds = trayIconBounds;
     }
 
     internal void Toggle(POINT anchor)
     {
-        if (IsVisible) HideFlyout();
-        else if (Stopwatch.GetElapsedTime(_hiddenAt) > ReopenGuard) ShowFlyout(anchor);
+        if (_dismissedByTrayPress) _dismissedByTrayPress = false;
+        else if (IsVisible) HideFlyout();
+        else ShowFlyout(anchor);
     }
 
     internal void ShowFlyout(POINT anchor)
     {
         _anchor = anchor;
+        _dismissedByTrayPress = false;
         if (!IsVisible)
         {
             // Cloaked while the first layout pass sizes the window, so it never flashes at the old spot.
@@ -114,8 +113,20 @@ public partial class FlyoutWindow : Window
     protected override void OnDeactivated(EventArgs e)
     {
         base.OnDeactivated(e);
+        if (!IsVisible) return;
+
+        // Pressing the tray icon deactivates the flyout on button-down, but Explorer reports the
+        // click only on release, however long the press. That click closed the flyout and must
+        // not reopen it. (Pressing the icon and dragging off it sends no click; the next one is
+        // then swallowed.)
+        _dismissedByTrayPress = IsLeftButtonDown() && GetCursorPos(out var cursor)
+            && _trayIconBounds() is { } icon
+            && cursor.X >= icon.Left && cursor.X < icon.Right && cursor.Y >= icon.Top && cursor.Y < icon.Bottom;
         HideFlyout();
     }
+
+    private static bool IsLeftButtonDown() =>
+        GetAsyncKeyState(GetSystemMetrics(SmSwapButton) != 0 ? VkRButton : VkLButton) < 0;
 
     protected override void OnKeyDown(KeyEventArgs e)
     {
@@ -127,7 +138,6 @@ public partial class FlyoutWindow : Window
     {
         if (!IsVisible) return;
         Hide();
-        _hiddenAt = Stopwatch.GetTimestamp();
     }
 
     private void Reposition()

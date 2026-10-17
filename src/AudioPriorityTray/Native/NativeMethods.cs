@@ -84,6 +84,9 @@ internal static class NativeMethods
     public const uint SwpNoActivate = 0x10;
     public const uint MonitorDefaultToNearest = 0x2;
     public const int SmCxSmIcon = 49;
+    public const int SmSwapButton = 23;
+    public const int VkLButton = 0x1;
+    public const int VkRButton = 0x2;
 
     [StructLayout(LayoutKind.Sequential)]
     public struct RECT
@@ -151,6 +154,12 @@ internal static class NativeMethods
 
     [DllImport("user32.dll")]
     public static extern int GetSystemMetricsForDpi(int index, uint dpi);
+
+    [DllImport("user32.dll")]
+    public static extern int GetSystemMetrics(int index);
+
+    [DllImport("user32.dll")]
+    public static extern short GetAsyncKeyState(int key);
 
     // MARK: DWM
 
