@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls.Primitives;
@@ -18,34 +17,33 @@ namespace AudioPriorityTray;
 /// </summary>
 public partial class FlyoutWindow : Window
 {
-    // Clicking the tray icon while the flyout is open deactivates (hides) it first and then
-    // arrives as a tray click; inside this window that click must not reopen it.
-    private static readonly TimeSpan ReopenGuard = TimeSpan.FromMilliseconds(300);
-
     private readonly MainViewModel _viewModel;
     private readonly Action _quit;
+    private readonly Func<RECT?> _trayIconBounds;
     private IntPtr _hwnd;
     private POINT _anchor;
-    private long _hiddenAt;
+    private bool _dismissedByTrayPress;
     private double _entranceOffset = 12;
 
-    public FlyoutWindow(MainViewModel viewModel, Action quit)
+    internal FlyoutWindow(MainViewModel viewModel, Action quit, Func<RECT?> trayIconBounds)
     {
         InitializeComponent();
         DataContext = _viewModel = viewModel;
         _quit = quit;
-        SizeChanged += (_, _) => { if (IsVisible) Reposition(); };
+        _trayIconBounds = trayIconBounds;
     }
 
     internal void Toggle(POINT anchor)
     {
-        if (IsVisible) HideFlyout();
-        else if (Stopwatch.GetElapsedTime(_hiddenAt) > ReopenGuard) ShowFlyout(anchor);
+        if (_dismissedByTrayPress) _dismissedByTrayPress = false;
+        else if (IsVisible) HideFlyout();
+        else ShowFlyout(anchor);
     }
 
     internal void ShowFlyout(POINT anchor)
     {
         _anchor = anchor;
+        _dismissedByTrayPress = false;
         if (!IsVisible)
         {
             // Cloaked while the first layout pass sizes the window, so it never flashes at the old spot.
@@ -92,13 +90,43 @@ public partial class FlyoutWindow : Window
         var exStyle = GetWindowLongPtr(_hwnd, GwlExStyle).ToInt64();
         SetWindowLongPtr(_hwnd, GwlExStyle, new IntPtr((exStyle | WsExToolWindow) & ~WsExAppWindow));
         ApplySystemBackdrop();
+        HwndSource.FromHwnd(_hwnd).AddHook(WndProc);
+    }
+
+    // SizeToContent resizes the window with SWP_NOMOVE after layout, so SizeChanged still sees the
+    // old window rect. Placing the window inside the resize itself keeps it pinned to the corner.
+    private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (msg == WmWindowPosChanging)
+        {
+            var pos = Marshal.PtrToStructure<WindowPos>(lParam);
+            if ((pos.flags & SwpNoSize) == 0)
+            {
+                (pos.x, pos.y) = Placement(pos.cx, pos.cy);
+                pos.flags &= ~SwpNoMove;
+                Marshal.StructureToPtr(pos, lParam, false);
+            }
+        }
+        return IntPtr.Zero;
     }
 
     protected override void OnDeactivated(EventArgs e)
     {
         base.OnDeactivated(e);
+        if (!IsVisible) return;
+
+        // Pressing the tray icon deactivates the flyout on button-down, but Explorer reports the
+        // click only on release, however long the press. That click closed the flyout and must
+        // not reopen it. (Pressing the icon and dragging off it sends no click; the next one is
+        // then swallowed.)
+        _dismissedByTrayPress = IsLeftButtonDown() && GetCursorPos(out var cursor)
+            && _trayIconBounds() is { } icon
+            && cursor.X >= icon.Left && cursor.X < icon.Right && cursor.Y >= icon.Top && cursor.Y < icon.Bottom;
         HideFlyout();
     }
+
+    private static bool IsLeftButtonDown() =>
+        GetAsyncKeyState(GetSystemMetrics(SmSwapButton) != 0 ? VkRButton : VkLButton) < 0;
 
     protected override void OnKeyDown(KeyEventArgs e)
     {
@@ -110,20 +138,25 @@ public partial class FlyoutWindow : Window
     {
         if (!IsVisible) return;
         Hide();
-        _hiddenAt = Stopwatch.GetTimestamp();
     }
 
-    /// <summary>Pins the window to the work-area corner next to the taskbar, in physical pixels.</summary>
     private void Reposition()
+    {
+        GetWindowRect(_hwnd, out var window);
+        var (x, y) = Placement(window.Width, window.Height);
+        SetWindowPos(_hwnd, IntPtr.Zero, x, y, 0, 0, SwpNoSize | SwpNoZOrder | SwpNoActivate);
+    }
+
+    /// <summary>The work-area corner next to the taskbar for a window of this size, in physical pixels.</summary>
+    private (int X, int Y) Placement(int width, int height)
     {
         var info = new MonitorInfo { cbSize = (uint)Marshal.SizeOf<MonitorInfo>() };
         GetMonitorInfo(MonitorFromPoint(_anchor, MonitorDefaultToNearest), ref info);
-        GetWindowRect(_hwnd, out var window);
 
         var work = info.rcWork;
         var margin = (int)Math.Round(12 * GetDpiForWindow(_hwnd) / 96.0);
-        var x = work.Right - window.Width - margin;
-        var y = work.Bottom - window.Height - margin;
+        var x = work.Right - width - margin;
+        var y = work.Bottom - height - margin;
         _entranceOffset = 12;
 
         if (work.Top > info.rcMonitor.Top)
@@ -135,8 +168,7 @@ public partial class FlyoutWindow : Window
         {
             x = work.Left + margin;
         }
-
-        SetWindowPos(_hwnd, IntPtr.Zero, x, y, 0, 0, SwpNoSize | SwpNoZOrder | SwpNoActivate);
+        return (x, y);
     }
 
     /// <summary>

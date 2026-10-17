@@ -34,7 +34,7 @@ public partial class App : Application
         var service = new WindowsAudioDeviceService(new DispatcherSynchronizationContext(Dispatcher));
         _manager = new AudioManager(service, new SettingsStore(Path.Combine(SettingsStore.DefaultDirectory, "settings.json")));
         _viewModel = new MainViewModel(_manager);
-        _flyout = new FlyoutWindow(_viewModel, Quit);
+        _flyout = new FlyoutWindow(_viewModel, Quit, () => _tray?.GetBounds());
 
         _tray = new TrayIcon();
         _tray.Invoked += (_, _) => _flyout.Toggle(TrayAnchor());
