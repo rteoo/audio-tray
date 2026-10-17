@@ -80,7 +80,7 @@ jobs:
 
   release:
     needs: build
-    if: github.event_name == 'push'
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -93,19 +93,7 @@ jobs:
           name: AudioTray
           path: release
 
-      - name: Nightly release
-        if: github.ref == 'refs/heads/main'
-        run: |
-          # One rolling pre-release that always points at the latest main.
-          gh release delete nightly --cleanup-tag --yes || true
-          gh release create nightly release/*.exe \
-            --prerelease \
-            --target "$GITHUB_SHA" \
-            --title "Nightly build" \
-            --notes "Automated build of the latest commit on main ($GITHUB_SHA). AudioTraySetup-*.exe installs per user and includes .NET; the portable AudioTray-win-*.exe needs the [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0)."
-
       - name: Tagged release
-        if: startsWith(github.ref, 'refs/tags/v')
         run: |
           # Creating a release in the GitHub UI also pushes its tag, so the release may already
           # exist; attach the assets to it instead of failing. Never replace assets a release

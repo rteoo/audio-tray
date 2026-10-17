@@ -47,9 +47,8 @@ AppId) and optionally packs `packaging/AppxManifest.xml` + `packaging/Assets/` w
 
 ## CI and releases
 
-`.github/workflows/build.yml` builds and tests on every PR and push. Pushes to `main` replace the
-rolling `nightly` pre-release; pushing a `v*` tag publishes a versioned release (the tag sets the
-version). Assets: per-user installers and portable framework-dependent exes for win-x64 and
+`.github/workflows/build.yml` builds and tests on every PR and push. Only pushing a `v*` tag
+publishes a release (the tag sets the version); there is no rolling pre-release. Assets: per-user installers and portable framework-dependent exes for win-x64 and
 win-arm64. The Store MSIX is a build artifact only, produced when the `AUDIOPRIORITY_MSIX_*`
 repository variables are set.
 

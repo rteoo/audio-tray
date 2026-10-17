@@ -51,8 +51,8 @@ Download `AudioTraySetup-<version>-x64.exe` (or `-arm64.exe`) from
 [Releases](https://github.com/rteoo/audio-tray/releases) and run it. It installs per user (no admin
 prompt) into `%LOCALAPPDATA%\Programs\AudioTray`, includes .NET, adds a Start menu entry, and
 can start the app with Windows. Uninstall from **Settings → Apps**; your settings in
-`%LOCALAPPDATA%\AudioPriorityTray` are kept. Tagged versions are stable; **nightly** tracks the
-latest `main`. Builds are unsigned, so SmartScreen may warn on first run.
+`%LOCALAPPDATA%\AudioPriorityTray` are kept. Builds are unsigned, so SmartScreen may warn on first
+run.
 
 The portable `AudioTray-win-*.exe` on the same page needs the
 [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0).
