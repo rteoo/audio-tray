@@ -78,7 +78,8 @@ try {
     }
     $version = $Tag.Substring(1)
     $started = [datetime]::UtcNow
-    Invoke-Checked (Join-Path $PSScriptRoot 'packaging/build.ps1') @('-Runtime', $Runtime, '-Version', $version) | Out-Host
+    # Named parameters: splatting a string array into a script binds every item positionally.
+    & (Join-Path $PSScriptRoot 'packaging/build.ps1') -Runtime $Runtime -Version $version | Out-Host
     $arch = $Runtime.Substring(4)
     Assert-Artifact "artifacts/installer/AudioTraySetup-$version-$arch.exe" $started
     Assert-Version
