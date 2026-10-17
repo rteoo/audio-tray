@@ -38,8 +38,19 @@ try {
 
     function cmd { throw 'A dry run must never invoke a package builder.' }
 
+    # Same parameter contract as packaging/build.ps1; writes the installer the real one would.
+    New-Item -ItemType Directory -Path (Join-Path $sandbox 'packaging') | Out-Null
+    @'
+param([Parameter(Mandatory)] [ValidateSet('win-x64', 'win-arm64')] [string] $Runtime, [string] $Version)
+$installer = Join-Path $PSScriptRoot '../artifacts/installer'
+New-Item -ItemType Directory -Force -Path $installer | Out-Null
+Set-Content -LiteralPath (Join-Path $installer "AudioTraySetup-$Version-$($Runtime.Substring(4)).exe") -Value 'installer'
+$global:releasePreparationTestState.Built = "$Runtime $Version"
+'@ | Set-Content -LiteralPath (Join-Path $sandbox 'packaging/build.ps1')
+
     & (Join-Path $sandbox 'prepare-release-windows.ps1') -Tag v1.2.3 -DryRun
     if ($global:releasePreparationTestState.Gates -eq 0) { throw 'Dry run skipped native gates.' }
+    if ($global:releasePreparationTestState.ContainsKey('Built')) { throw 'A dry run invoked the package builder.' }
 
     $cases = @{
         'dirty' = 'clean'
@@ -64,7 +75,13 @@ try {
             throw "A rejected checkout ran gates: $($case.Key)"
         }
     }
-    Write-Host 'audio-tray: 7 release preparation scenarios passed'
+    $global:releasePreparationTestState.Mode = 'ok'
+    & (Join-Path $sandbox 'prepare-release-windows.ps1') -Tag v1.2.3 -Runtime win-arm64 | Out-Null
+    if ($global:releasePreparationTestState.Built -ne 'win-arm64 1.2.3') {
+        throw "Real mode built '$($global:releasePreparationTestState.Built)' instead of 'win-arm64 1.2.3'."
+    }
+
+    Write-Host 'audio-tray: 8 release preparation scenarios passed'
 }
 finally {
     Set-Location $original
