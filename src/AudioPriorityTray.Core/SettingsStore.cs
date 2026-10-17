@@ -104,6 +104,13 @@ public sealed class SettingsStore
         set { _data.CustomMode = value; Save(); }
     }
 
+    /// <summary>Automatic modes leave a default picked outside the app until a device comes or goes.</summary>
+    public bool KeepExternalPicks
+    {
+        get => _data.KeepExternalPicks;
+        set { _data.KeepExternalPicks = value; Save(); }
+    }
+
     // MARK: Categories
 
     public OutputCategory GetCategory(AudioDevice device)
@@ -257,6 +264,7 @@ public sealed class SettingsStore
         public Dictionary<string, OutputCategory> DeviceCategories { get; set; } = [];
         public OutputCategory CurrentMode { get; set; } = OutputCategory.Speaker;
         public bool CustomMode { get; set; }
+        public bool KeepExternalPicks { get; set; }
         public List<string> HiddenMics { get; set; } = [];
         public List<string>? HiddenHeadphoneMics { get; set; }
         public List<string> HiddenSpeakers { get; set; } = [];

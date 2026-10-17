@@ -28,6 +28,8 @@ menu bar app with the same priority model.
   driver reports (headphones or headset), with a name-keyword fallback. Localized names like
   "Fones de ouvido" still classify correctly.
 - **Manual mode**: turns off auto-switching so you pick devices yourself.
+- **Keep devices picked in Windows** (app menu, off by default): a default you pick outside the app
+  stays until a device connects or disconnects, or the app restarts.
 - **Device memory**: remembers every device ever connected. Edit mode shows disconnected devices
   with "last seen" times, so you can rank them before they're plugged in.
 - **Ignore and never use**: hide a device from one category, from both, or exclude it from
@@ -102,7 +104,9 @@ headphones connect or disconnect) applies that mode's top microphone, except in 
 - **Edit** shows every device ever seen, including disconnected and ignored ones.
 
 In automatic modes the app enforces the ranking: if something else changes the default device, the
-app switches back to the top-priority one. Use Manual mode to pick freely.
+app switches back to the top-priority one. Turn on **Keep devices picked in Windows** in the app
+menu to let such a pick stand until a device connects or disconnects, or use Manual mode to pick
+freely.
 
 ## How it works
 

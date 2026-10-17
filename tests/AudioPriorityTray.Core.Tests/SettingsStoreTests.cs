@@ -18,6 +18,7 @@ public sealed class SettingsStoreTests : IDisposable
         store.SetNeverUse(headphones, true);
         store.CurrentMode = OutputCategory.Headphone;
         store.IsCustomMode = true;
+        store.KeepExternalPicks = true;
         store.SavePriorities([FakeAudioDeviceService.Output("b"), FakeAudioDeviceService.Output("a")], PriorityList.Speaker);
 
         var reloaded = new SettingsStore(SettingsPath);
@@ -27,6 +28,7 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.True(reloaded.IsNeverUse(headphones));
         Assert.Equal(OutputCategory.Headphone, reloaded.CurrentMode);
         Assert.True(reloaded.IsCustomMode);
+        Assert.True(reloaded.KeepExternalPicks);
         Assert.Equal(["b", "a"], reloaded.SortByPriority(
             [FakeAudioDeviceService.Output("a"), FakeAudioDeviceService.Output("b")], PriorityList.Speaker).Select(d => d.Id));
     }

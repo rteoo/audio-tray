@@ -107,6 +107,8 @@ public sealed class MainViewModel : ObservableObject
             new("Headphones", null, () => SelectMode(OutputCategory.Headphone), IsChecked: IsHeadphoneMode),
             new("Manual", null, EnterManualMode, IsChecked: IsCustomMode),
             MenuEntry.Separator,
+            new("Keep devices picked in Windows", null, () => _manager.SetKeepExternalPicks(!_manager.KeepExternalPicks),
+                IsChecked: _manager.KeepExternalPicks),
             new("Sound settings", Glyphs.Settings, () => OpenSettings("ms-settings:sound")),
             LaunchAtLogin.IsManagedByWindows
                 ? new("Startup apps settings", null, () => OpenSettings("ms-settings:startupapps"))
