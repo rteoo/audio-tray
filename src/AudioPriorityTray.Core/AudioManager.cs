@@ -11,6 +11,8 @@ public sealed class AudioManager : IDisposable
     private readonly TimeProvider _time;
     private HashSet<string> _connectedIds = [];
     private HashSet<string> _previousConnectedIds = [];
+    private bool _holdInput;
+    private bool _holdOutput;
 
     public AudioManager(IAudioDeviceService service, SettingsStore store, TimeProvider? time = null)
     {
@@ -51,6 +53,7 @@ public sealed class AudioManager : IDisposable
     public string? CurrentOutputId { get; private set; }
     public OutputCategory CurrentMode { get; private set; }
     public bool IsCustomMode { get; private set; }
+    public bool KeepExternalPicks => Store.KeepExternalPicks;
     public bool IsEditMode { get; private set; }
     public float Volume { get; private set; }
     public IReadOnlySet<string> MutedDeviceIds { get; private set; } = new HashSet<string>();
@@ -106,6 +109,19 @@ public sealed class AudioManager : IDisposable
         {
             ApplyHighestPriority(PriorityList.Input);
             ApplyHighestPriorityOutput();
+        }
+        RaiseChanged();
+    }
+
+    public void SetKeepExternalPicks(bool enabled)
+    {
+        Store.KeepExternalPicks = enabled;
+        if (!enabled && !IsCustomMode)
+        {
+            _holdInput = _holdOutput = false;
+            ApplyHighestPriority(PriorityList.Input);
+            ApplyHighestPriorityOutput();
+            RefreshVolumeAndMute();
         }
         RaiseChanged();
     }
@@ -322,15 +338,26 @@ public sealed class AudioManager : IDisposable
     private void OnDevicesChanged(object? sender, EventArgs e)
     {
         var previous = _previousConnectedIds;
+        var (appliedInput, appliedOutput) = (CurrentInputId, CurrentOutputId);
         RefreshDevices();
         var newlyConnected = _connectedIds.Except(previous).ToHashSet();
+        var deviceSetChanged = !_connectedIds.SetEquals(previous);
         _previousConnectedIds = [.. _connectedIds];
 
         if (!IsCustomMode)
         {
             AutoSwitchModeIfNeeded(newlyConnected);
-            ApplyHighestPriority(PriorityList.Input);
-            ApplyHighestPriorityOutput();
+
+            // With the same devices present, a default that differs from the one last applied was
+            // picked outside the app; KeepExternalPicks holds it until a device comes or goes.
+            if (deviceSetChanged || !KeepExternalPicks) _holdInput = _holdOutput = false;
+            else
+            {
+                _holdInput |= CurrentInputId != appliedInput;
+                _holdOutput |= CurrentOutputId != appliedOutput;
+            }
+            if (!_holdInput) ApplyHighestPriority(PriorityList.Input);
+            if (!_holdOutput) ApplyHighestPriorityOutput();
         }
         RefreshVolumeAndMute();
         RaiseChanged();

@@ -89,6 +89,43 @@ public sealed class AudioManagerTests : IDisposable
     }
 
     [Fact]
+    public void Kept_external_picks_survive_until_a_device_comes_or_goes()
+    {
+        _store.SavePriorities([Output("desk"), Output("monitor")], PriorityList.Speaker);
+        _store.SavePriorities([Input("usb-mic"), Input("webcam")], PriorityList.Input);
+        var service = new FakeAudioDeviceService().With(Output("desk"), Output("monitor"), Input("usb-mic"), Input("webcam"));
+        var manager = Start(service);
+        manager.SetKeepExternalPicks(true);
+
+        service.ChangeDefaultExternally("monitor");
+        service.ChangeDefaultExternally("webcam");
+        service.ChangeDefaultExternally("webcam"); // any later notification that changes nothing
+
+        Assert.Equal("monitor", service.DefaultOutput);
+        Assert.Equal("webcam", service.DefaultInput);
+
+        service.Connect(Output("hdmi", "Monitor Speakers"));
+
+        Assert.Equal("desk", service.DefaultOutput);
+        Assert.Equal("usb-mic", service.DefaultInput);
+    }
+
+    [Fact]
+    public void Turning_off_kept_picks_reapplies_the_ranking()
+    {
+        _store.SavePriorities([Output("desk"), Output("monitor")], PriorityList.Speaker);
+        var service = new FakeAudioDeviceService().With(Output("desk"), Output("monitor"));
+        var manager = Start(service);
+        manager.SetKeepExternalPicks(true);
+        service.ChangeDefaultExternally("monitor");
+
+        manager.SetKeepExternalPicks(false);
+
+        Assert.False(manager.KeepExternalPicks);
+        Assert.Equal("desk", service.DefaultOutput);
+    }
+
+    [Fact]
     public void Default_is_not_reapplied_when_it_is_already_current()
     {
         var service = new FakeAudioDeviceService().With(Output("desk"), Input("mic"));
