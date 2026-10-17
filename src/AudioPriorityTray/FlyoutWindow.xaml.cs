@@ -34,7 +34,6 @@ public partial class FlyoutWindow : Window
         InitializeComponent();
         DataContext = _viewModel = viewModel;
         _quit = quit;
-        SizeChanged += (_, _) => { if (IsVisible) Reposition(); };
     }
 
     internal void Toggle(POINT anchor)
@@ -92,6 +91,24 @@ public partial class FlyoutWindow : Window
         var exStyle = GetWindowLongPtr(_hwnd, GwlExStyle).ToInt64();
         SetWindowLongPtr(_hwnd, GwlExStyle, new IntPtr((exStyle | WsExToolWindow) & ~WsExAppWindow));
         ApplySystemBackdrop();
+        HwndSource.FromHwnd(_hwnd).AddHook(WndProc);
+    }
+
+    // SizeToContent resizes the window with SWP_NOMOVE after layout, so SizeChanged still sees the
+    // old window rect. Placing the window inside the resize itself keeps it pinned to the corner.
+    private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (msg == WmWindowPosChanging)
+        {
+            var pos = Marshal.PtrToStructure<WindowPos>(lParam);
+            if ((pos.flags & SwpNoSize) == 0)
+            {
+                (pos.x, pos.y) = Placement(pos.cx, pos.cy);
+                pos.flags &= ~SwpNoMove;
+                Marshal.StructureToPtr(pos, lParam, false);
+            }
+        }
+        return IntPtr.Zero;
     }
 
     protected override void OnDeactivated(EventArgs e)
@@ -113,17 +130,23 @@ public partial class FlyoutWindow : Window
         _hiddenAt = Stopwatch.GetTimestamp();
     }
 
-    /// <summary>Pins the window to the work-area corner next to the taskbar, in physical pixels.</summary>
     private void Reposition()
+    {
+        GetWindowRect(_hwnd, out var window);
+        var (x, y) = Placement(window.Width, window.Height);
+        SetWindowPos(_hwnd, IntPtr.Zero, x, y, 0, 0, SwpNoSize | SwpNoZOrder | SwpNoActivate);
+    }
+
+    /// <summary>The work-area corner next to the taskbar for a window of this size, in physical pixels.</summary>
+    private (int X, int Y) Placement(int width, int height)
     {
         var info = new MonitorInfo { cbSize = (uint)Marshal.SizeOf<MonitorInfo>() };
         GetMonitorInfo(MonitorFromPoint(_anchor, MonitorDefaultToNearest), ref info);
-        GetWindowRect(_hwnd, out var window);
 
         var work = info.rcWork;
         var margin = (int)Math.Round(12 * GetDpiForWindow(_hwnd) / 96.0);
-        var x = work.Right - window.Width - margin;
-        var y = work.Bottom - window.Height - margin;
+        var x = work.Right - width - margin;
+        var y = work.Bottom - height - margin;
         _entranceOffset = 12;
 
         if (work.Top > info.rcMonitor.Top)
@@ -135,8 +158,7 @@ public partial class FlyoutWindow : Window
         {
             x = work.Left + margin;
         }
-
-        SetWindowPos(_hwnd, IntPtr.Zero, x, y, 0, 0, SwpNoSize | SwpNoZOrder | SwpNoActivate);
+        return (x, y);
     }
 
     /// <summary>

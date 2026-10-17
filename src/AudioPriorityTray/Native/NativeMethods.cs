@@ -77,7 +77,9 @@ internal static class NativeMethods
     public const int GwlExStyle = -20;
     public const long WsExToolWindow = 0x80;
     public const long WsExAppWindow = 0x40000;
+    public const int WmWindowPosChanging = 0x46;
     public const uint SwpNoSize = 0x1;
+    public const uint SwpNoMove = 0x2;
     public const uint SwpNoZOrder = 0x4;
     public const uint SwpNoActivate = 0x10;
     public const uint MonitorDefaultToNearest = 0x2;
@@ -95,6 +97,15 @@ internal static class NativeMethods
     public struct POINT(int x, int y)
     {
         public int X = x, Y = y;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct WindowPos
+    {
+        public IntPtr hwnd;
+        public IntPtr hwndInsertAfter;
+        public int x, y, cx, cy;
+        public uint flags;
     }
 
     [StructLayout(LayoutKind.Sequential)]
